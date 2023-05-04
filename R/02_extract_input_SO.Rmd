@@ -1,0 +1,159 @@
+---
+title: "Extract data from Earth System modelas for the Southern Ocean"
+author: "Camilla Novaglio"
+date: "01/05/2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### AIM
+
+Extract mean values of phytoplankton, and zooplankton the period 1990-1999 across ESM used in FishMIP for comparison with yang et al. 2022. 
+
+phyc-vint: Integrated Total Phytoplankton Carbon Concentration 
+zooc-vint: Integrated Total Zooplankton Carbon Concentration 
+
+**Alternative option** for better comparison: 
+
+zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration 
+
+### Data source 
+
+Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocl: phytoc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/GFDL-ESM4/gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/GFDL-ESM4/gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
+
+### *TO CHECK* 
+
+Strange time dimention now adjusted but this is my interpretation. **Ask Matthias**
+
+Final values are mean mol m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values, we average instead of sum across months. For NPP and catch we would sum across months to get yearly valuee as these are rates with a time dimension.      
+
+To transform from mol m-2 to g C m-2 I did X12.01
+
+For better comparison use **zmeso-vint**? I don't totally understand this output -e.g. which size included and how this has been created - and I would use total zooplankton instead.  
+
+Values not decreasing from phyto-zoo-tcb? Should we do **ESMs+MEMs driven by phyto/zoo only and separately**? 
+
+### Set environment 
+
+```{r environment, echo = FALSE}
+
+rm(list=ls())
+
+library(ncdf4) 
+library(raster) 
+library(ggplot2) 
+library(data.table)
+library(dtplyr)
+library(ncdf4.helpers)
+library(tictoc)
+library(dplyr, warn.conflicts = FALSE)
+library(broom)
+library(tibble)
+library(tidyr)
+library(purrr)
+library(stringr)
+library(parallel)
+library(pbapply)
+
+select<-dplyr::select
+summarise<-dplyr::summarise
+
+# load functions 
+source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
+
+```
+
+### Read in files and extract modelled data at global scale
+
+```{r step 1 to 2}
+
+# create file names ----
+dir<-"/rd/gem/private/users/camillan/Extract_SouthernOcean_Data" 
+
+# define them manually as they are only 4
+netcdf_phyto= list("gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc",
+                   "ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc")
+
+netcdf_zoo= list("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
+                 "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
+
+
+# apply function in // ----
+
+phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
+# are nomes OK?? TO CHECK 
+names(phyto_ant) <- netcdf_phyto
+
+zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
+names(zoo_ant) <- netcdf_zoo
+
+```
+
+### save data
+
+```{r}
+
+save(phyto_ant, zoo_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+
+```
+
+### multimodel means 
+
+```{r}
+
+# combine outputs and average
+file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
+mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = T)
+
+file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
+mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = T)
+
+# CHECK 
+# calculate mean using other approach for size class 2 and compare results to above approach 
+
+trial<-list(phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`, phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`)
+
+trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+
+trial3<-do.call(rbind.data.frame, trial2)
+trial4<-trial3 %>% 
+  group_by(x,y) %>% 
+  summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
+  ungroup
+
+trial_raster<-rasterFromXYZ(trial4)
+
+# same outputs but trial_raster includes higher lats (empty...)
+plot(trial_raster)
+plot(mean_phyto)
+
+#### WARNING - very different from before - is this becasue of changes in units?? ALOS CONSIDER that now you are looking at a DIFFERENT SPATIAL COVERAGE OF DATA (-60 before, -35 now)
+# check files and means 
+plot(mean_phyto)
+plot(mean_zoo)
+
+```
+
+## save means 
+
+```{r}
+
+# 2 is jutst to check that results are differnt from previous version (see email to Philip and repeat alysis without data transformation) only becasue of data transformation and different spatial coverage 
+save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means2.RData")
+# save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+
+```

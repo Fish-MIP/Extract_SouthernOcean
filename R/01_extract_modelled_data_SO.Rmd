@@ -1,0 +1,279 @@
+---
+title: "Extract data from ecosystem models for the Southern Ocean"
+author: "Camilla Novaglio"
+date: "27/04/2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### AIM
+
+Extract mean size-resolved total consumer biomass for the period 1990-1999 across FishMIP models 
+
+### Data source 
+
+Size-resolved biomass (tcblog10) is as for EmergentConstrint project. Adding macroecological for this project: 
+
+Download on 01/05/2023 - only history (and picontrol as in same folder) and not future as this project does not require it
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/OutputData/marine-fishery_global/MACROECOLOGICAL/gfdl-esm4/historical/*nat_default_tcblog10* ./ 
+
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/OutputData/marine-fishery_global/MACROECOLOGICAL/ipsl-cm6a-lr/historical/*nat_default_tcblog10* ./ 
+
+### SO boundaries 
+
+From Paul Spence: 
+/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc" OR new regridded version but need to ask Paul again. 
+
+LME from - not much data included - from Julia's dropbox folder FishMIP Repos/LME66/
+
+World_Seas_IHO_v3 from https://www.marineregions.org/downloads.php
+
+Or just latitudinal limits to mimic Yang et al. 2022 **used this**
+
+### *TO CHECK* 
+
+Extent is different for dbpm and zoom IPSL - now dealt with it but **needs more checking**. Also need to adjust the emergent constraint code accordingly (e.g. inside plot_gridded_slope_mpas() in plotting_functions_EC you are using setExtent too). 
+
+**Check better** extent, crs, crop and mask inside function and in general 
+
+Final values are mean g m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values we average instead of sum across months. For NPP and catch we would sum across months to get yearly value as these are rates with a time dimension.      
+
+To transform from g m-2 to g C m-2 for better comparison with inputs I did /10   
+
+MACROECOLOGICAL: 5 bins, data is extracted but not sure whether I should include it in the multi-model mean as I don't know which classes these are (likely 1 to 5 though as specified in bins names). **Ryan will check**
+
+### Set environment 
+
+```{r environment, echo = FALSE}
+
+rm(list=ls())
+
+library(ncdf4) 
+library(raster) 
+library(ggplot2) 
+library(data.table)
+library(dtplyr)
+library(ncdf4.helpers)
+library(tictoc)
+library(dplyr, warn.conflicts = FALSE)
+library(broom)
+library(tibble)
+library(tidyr)
+library(purrr)
+library(stringr)
+library(parallel)
+library(pbapply)
+
+select<-dplyr::select
+summarise<-dplyr::summarise
+
+# load functions 
+source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
+
+```
+
+### check provided SO mask 
+
+```{r}
+
+# mask<-nc_open("/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc")
+# print(mask)
+# 
+# # 15 variables
+# # 5 dimensions (t lat and lon, time, u lat and long)
+# 
+# lon_tcell <- ncvar_get(mask, "xt_ocean")
+# lat_tcell <- ncvar_get(mask, "yt_ocean")
+# lon_tcell <- ncvar_get(mask, "xt_ocean") # keep going
+# t <- as.character(nc.get.time.series(mask))
+# 
+# # variables: geolat_c, geolon_c, geolat_t, geolon_t, dxt, dyt, dxu, dyu, area_t, area_u, kmt, kmu, drag_coeff,
+# 
+# #get the variable in "matrix slices"
+# 
+# lswt_array <- ncvar_get(mask, "dxt") # understandable ...
+# lswt_array <- ncvar_get(mask, "kmt")
+# dim(lswt_array)
+# image(lswt_array)
+# 
+# fillvalue <- ncatt_get(mask, "ht", "_FillValue")
+# dim(lswt_array) #to check; this should give you 24 23 2622
+# #right away let's replace the nc FillValues with NAs
+# lswt_array[lswt_array==fillvalue$value] <- NA
+# lswt_array
+# image(lswt_array)
+
+# use World_Seas_IHO_v3 from https://www.marineregions.org/gazetteer.php?p=details&id=1907
+# or LME 66 from Julia's fishMIp repo in Dropbox and used for the LME example she created. LME 61 is the Antarctic. 
+
+# inside the function now 
+# library(sf)
+# shape<-st_read("/home/ubuntu/extract_SouthernOcean/Input/LME66/LMEs66.shp")
+# library(dplyr)
+# unique(shape$LME_NAME)
+# ant<-shape[47,] # south east Australia # WARNING - why is this 47 instead of 61???? 
+# plot(ant)
+
+```
+
+### Read in files and extract modelled data at global scale
+
+```{r step 1 to 2}
+
+# create file names ----
+dir<-"/rd/gem/private/users/camillan/EmergentConstraintData" 
+
+mem<-c("apecosm","boats", "dbpm", "zoomss", "ecotroph", "macroecological") 
+esm<-c("gfdl-esm4", "ipsl-cm6a-lr")
+scenario<-c("historical") # , "ssp126", "ssp585") # NO NEED FOR FUTURE ... 
+
+# all 
+combinations<-expand.grid(mem = mem, esm = esm, scenario = scenario) %>%
+  mutate(resolution = ifelse(mem %in% c("zoomss", "ecotroph", "macroecological"), "annual", "monthly"), 
+         year = case_when(
+           mem %in% c("boats", "zoomss", "ecotroph", "macroecological") & scenario == "historical" ~ "1950_2014", 
+           mem %in% c("apecosm", "dbpm") & scenario == "historical" ~ "1850_2014",
+           scenario %in% c("ssp126", "ssp585") ~ "2015_2100"), 
+         mem = as.character(mem), 
+         esm = as.character(esm), 
+         scenario = as.character(scenario),
+         netcdf_name = paste0(paste(mem, esm, "nobasd", scenario, "nat_default_tcblog10_global", resolution, year, sep ="_"), ".nc"),
+         esm_simpler = ifelse(esm == "ipsl-cm6a-lr", "ipsl","gfdl"),
+         identifier = paste(mem, esm_simpler, scenario, sep ="_")) %>% 
+  select(-esm_simpler) %>% 
+  arrange(mem, esm, scenario)
+
+# apply function in // ----
+
+netcdf = combinations$netcdf_name
+
+brick_data_annual_subset_mean_ant<-mclapply(netcdf, function(x) extract_antarctica(x, file = "new"), mc.cores = detectCores()-2)
+names(brick_data_annual_subset_mean_ant) <- combinations$identifier
+
+### WARNINGs
+# land between GFDL and IPSL is different so coastal values might be "biased" e.g. mean with na.rm=TRUE will consider only GFDL values for the very coastal gridcell (and only a set of models).
+# ZOOM bins fixed but need to contact Jase and Matthias 
+
+```
+
+### save data
+
+```{r}
+
+save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_month_WS.RData")
+
+# # FINAL NAME - REMOVE ALL OUTPUTS ONCE DETERMINED THE ERROR 
+# save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
+
+```
+
+### multimodel means 
+
+```{r}
+
+rm(list=ls())
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_month_WS.RData")
+
+# do size classes 2:5 that are in common to all models 
+
+mean <-list()
+
+for(i in 2:5){
+
+  trial<-stack(
+    brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[i]],
+    brick_data_annual_subset_mean_ant$boats_gfdl_historical[[i]], 
+    brick_data_annual_subset_mean_ant$boats_ipsl_historical[[i]],
+    brick_data_annual_subset_mean_ant$dbpm_ipsl_historical[[i]], 
+    brick_data_annual_subset_mean_ant$ecotroph_gfdl_historical[[i]],
+    brick_data_annual_subset_mean_ant$ecotroph_ipsl_historical[[i]],
+    brick_data_annual_subset_mean_ant$macroecological_gfdl_historical[[i]],
+    brick_data_annual_subset_mean_ant$macroecological_ipsl_historical[[i]],
+    brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[i]], 
+    brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[i]])
+ 
+  mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = T)
+   
+}
+
+# do size class 1 where macroecological is available but not boats 
+
+trial_1<-stack(
+    brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[1]],
+    brick_data_annual_subset_mean_ant$dbpm_ipsl_historical[[1]], 
+    brick_data_annual_subset_mean_ant$ecotroph_gfdl_historical[[1]],
+    brick_data_annual_subset_mean_ant$ecotroph_ipsl_historical[[1]],
+    brick_data_annual_subset_mean_ant$macroecological_gfdl_historical[[1]],
+    brick_data_annual_subset_mean_ant$macroecological_ipsl_historical[[1]],
+    brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[1]], 
+    brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[1]])
+
+mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = T)
+
+# do size class 6 where boats and macroecological are not available
+
+trial_6<-stack(
+    brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[6]],
+    brick_data_annual_subset_mean_ant$dbpm_ipsl_historical[[6]], 
+    brick_data_annual_subset_mean_ant$ecotroph_gfdl_historical[[6]],
+    brick_data_annual_subset_mean_ant$ecotroph_ipsl_historical[[6]],
+    brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[6]], 
+    brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[6]])
+
+mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = T)
+
+# append all data together 
+mean_all<-append(mean_1, mean)
+mean_all<-append(mean_all, mean_6)
+mean_all[sapply(mean_all, is.null)] <- NULL
+
+# CHECK 
+# calculate mean using other approach for size class 2 and compare results to above approach 
+
+trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 1) 
+trial[sapply(trial, is.null)] <- NULL
+
+trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+
+trial3<-do.call(rbind.data.frame, trial2)
+trial4<-trial3 %>% 
+  group_by(x,y) %>% 
+  summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
+  ungroup
+
+trial4<-trial4 %>%  filter(y < -60)
+
+trial_raster<-rasterFromXYZ(trial4)
+
+# same outputs but trial_raster includes higher lats (empty...)
+plot(trial_raster)
+plot(mean_all[[1]])
+
+##### check outputs and reason in comparison with size-spectrum paper 
+plot(mean_all[[1]]) #15   
+plot(mean_all[[2]]) #15  
+plot(mean_all[[3]]) #12  
+plot(mean_all[[4]]) #12   
+plot(mean_all[[5]]) #10   
+plot(mean_all[[6]]) #5   
+
+```
+
+## save means 
+
+```{r}
+
+
+# 2 is jutst to check that results are differnt from previous version (see email to Philip and repeat alysis without data transformation) only becasue of data transformation and different spatial coverage 
+save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means2.RData")
+
+# save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
+
+```
