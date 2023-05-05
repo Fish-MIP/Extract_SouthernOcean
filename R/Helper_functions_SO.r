@@ -7,7 +7,7 @@
 extract_antarctica<-function(netcdf, file = "new"){
   
   # # trial
-  # netcdf = "dbpm_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"
+  # netcdf = "ecotroph_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"
   # file = "new"
 
   if(file.exists(file.path(dir, netcdf))){
@@ -228,98 +228,98 @@ extract_antarctica<-function(netcdf, file = "new"){
   
   # SELECT SO polygon:  
   
-  # # USING LME 
-  # library(sf)
-  # shape<-st_read("/home/ubuntu/extract_SouthernOcean/Input/LME66/LMEs66.shp")
-  # # unique(shape$LME_NAME)
-  # ant<-shape[47,] # WARNING - shouldn't SO be 61? 
-  # # plot(ant)
-  
+  # # # USING LME 
+  # # library(sf)
+  # # shape<-st_read("/home/ubuntu/extract_SouthernOcean/Input/LME66/LMEs66.shp")
+  # # ant<-shape[47,] # WARNING - shouldn't SO be 61? 
+  # 
   # # USING World_Seas_IHO_v3
   # library(sf)
   # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/World_Seas_IHO_v3/World_Seas_IHO_v3.shp")
-  # # head(shape)
-  # # unique(shape$NAME)
-  # ant<-shape[63,] # Southern Ocean  
-  # # plot(ant)
-  
-  # loop through sizes (could use stackapply)
-  brick_data_annual_subset_mean_ant<-list()
-
-  for(i in layers){
-    # OK here for BOATS - the bins become 4 after line above on bins but layers are 6 with 2 NULL ones.
-    # macroecological is more problematic as it has 5 bins and layers... so not used here for now
-
-    # i = 2
-    trial<-brick_data_annual_subset_mean[[i]]
-
-    # this is wrong - something happens here ...
-    # extent(trial) <- extent(shape)
-    # this does not do much ....
-    crs(trial) <- crs(shape)
-
-    # this seems to work but
-    temp<-crop(trial, extent(ant))
-    trial2<-mask(temp, ant)
-    # plot(trial2)
-
-    brick_data_annual_subset_mean_ant[[i]]<-trial2
-
-  }
-
-  dim(brick_data_annual_subset_mean_ant[[2]])
-  plot(brick_data_annual_subset_mean_ant[[2]])
-  extent(brick_data_annual_subset_mean_ant[[2]])
-  
-  #### OR cut values of lat < e.g.-40 for comparison with Yang et al. 2022
-  
+  # ant<-shape[63,] # Southern Ocean
+  # 
+  # # loop through sizes (could use stackapply)
   # brick_data_annual_subset_mean_ant<-list()
   # 
-  # # this version of the code does not work with BOATS size classes 1 and 6 (empty)
-  # # so need to define a different layer for BOATS 
+  # for(i in layers){
+  #   # OK here for BOATS - the bins become 4 after line above on bins but layers are 6 with 2 NULL ones.
+  #   # macroecological is more problematic as it has 5 bins and layers... so not used here for now
   # 
-  # if (model == "boats"){
-  #   layers<-c(2:5)
-  # }else{
-  #   layers<-layers
-  # }
+  #   # i = 2
+  #   trial<-brick_data_annual_subset_mean[[i]]
   # 
-  # for(i in layers){ 
+  #   crs(trial) <- crs(shape)
+  #   temp<-crop(trial, extent(ant))
+  #   trial2<-mask(temp, ant) # NOTE - for EcoTroph, 
+  #   # here you remove some coastal outliers that are not inside the ant poligon.
+  #   # because you do not remove these values with the option below based on lat band
+  #   # the 2 plots from the 2 appraoch look very different but they are not, 
+  #   # once removed these outliers using the appraoch below, the plots are the same 
+  # 
+  #   brick_data_annual_subset_mean_ant[[i]]<-trial2
   #   
-  #     trial<-brick_data_annual_subset_mean[[i]]
-  #     trial<-as.data.frame(rasterToPoints(trial))
-  #     
-  #     #### WARNING
-  #     # the below results in different final extent between IPSL and GFDL 
-  #     # trial<-filter(trial, y <= -35)
-  #     # class      : Extent 
-  #     # xmin       : -180 
-  #     # xmax       : 180 
-  #     # ymin       : -79 
-  #     # ymax       : -35 
-  #     # 
-  #     # class      : Extent 
-  #     # xmin       : -180 
-  #     # xmax       : 180 
-  #     # ymin       : -78 
-  #     # ymax       : -35 
-  #     # pick the minimum common denominator and cut lower lat. 
-  #     # This does not happen when using polygons (above) as the lower part of the polygon of is land 
-  #     
-  #     trial<-filter(trial, y <= -40, y >= -78)
-  #     brick_data_annual_subset_mean_ant[[i]]<-rasterFromXYZ(trial, crs = crs(brick_data_annual_subset_mean[[i]]))
   # }
+  # 
+  # # dim(brick_data_annual_subset_mean_ant[[2]])
+  # # plot(brick_data_annual_subset_mean_ant[[2]])
+  # # extent(brick_data_annual_subset_mean_ant[[2]])
   
+  #### OR cut values of lat < e.g.-40 for comparison with Yang et al. 2022
+
+  brick_data_annual_subset_mean_ant<-list()
+
+  # this version of the code does not work with BOATS size classes 1 and 6 (empty)
+  # so need to define a different layer for BOATS
+
+  if (model == "boats"){
+    layers<-c(2:5)
+  }else{
+    layers<-layers
+  }
+
+  for(i in layers){
+
+    # i = 2
+      trial<-brick_data_annual_subset_mean[[i]] # here is already 
+      trial<-as.data.frame(rasterToPoints(trial))
+
+      #### WARNING
+      # the below results in different final extent between IPSL and GFDL
+      # trial<-filter(trial, y <= -35)
+      # class      : Extent
+      # xmin       : -180
+      # xmax       : 180
+      # ymin       : -79
+      # ymax       : -35
+      #
+      # class      : Extent
+      # xmin       : -180
+      # xmax       : 180
+      # ymin       : -78
+      # ymax       : -35
+      # pick the minimum common denominator and cut lower lat.
+      # This does not happen when using polygons (above) as the lower part of the polygon of is land
+
+      trial<-filter(trial, y <= -40, y >= -78)
+      
+      # ## for ecotroph checking: 
+      # trial<-filter(trial, y <= -60, y >= -78)
+      # # If outliers are removed (see above for explanation) 
+      # # plots from the two approaches are the same. 
+      # # no need to delete them, just to se a meaningful range of values to consider in maps
+      # mistmatches<-filter(trial, index_1 > 49.15919 | index_1 < 8.972864)
+      # trial<-filter(trial, index_1 >= 8.972864 & index_1 <= 49.15919)
+      
+      brick_data_annual_subset_mean_ant[[i]]<-rasterFromXYZ(trial, crs = crs(brick_data_annual_subset_mean[[i]]))
+  }
+
+  # # same output as above when extracting using polygon
+  # plot(brick_data_annual_subset_mean_ant[[2]])
+
   # unit conversion: from g m-2 to g C m-2 for better comparison with inputs   
-  # if(b_units == "g m-2"){
-  # brick_data_annual_subset_mean_ant<-brick_data_annual_subset_mean_ant/10
-  # b_units = "g C m-2"}
-  
-  #### WRONG - just for checking 
-  if(time_step == "annual"){brick_data_annual_subset_mean_ant<-brick_data_annual_subset_mean_ant/12}
-  
-  
-  
+  if(b_units == "g m-2"){
+    brick_data_annual_subset_mean_ant = lapply(brick_data_annual_subset_mean_ant, FUN = function(x) x/10)
+    b_units = "g C m-2"}
   
   rm(brick_data, brick_data_annual, brick_data_annual_subset, indices, indices2, indices_subset3, indices_position3, brick_data_annual_subset_mean, indices4) # remove objects that are not needed 
   
@@ -536,12 +536,10 @@ extract_antarctica_inputs<-function(netcdf){
     brick_data_annual_subset_mean_ant<-rasterFromXYZ(trial, crs = crs(brick_data_annual_subset_mean))
     # plot(brick_data_annual_subset_mean_ant)
 
-    # # Units: from mol m-2 to g C m-2
-    # if(b_units == "mol m-2"){
-    #   brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12
-    #   b_units == "g C m-2"}
-    
-    
+    # Units: from mol m-2 to g C m-2
+    if(b_units == "mol m-2"){
+      brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12.01
+      b_units == "g C m-2"}
     
     rm(brick_data, brick_data_annual, brick_data_annual_subset, indices, indices2, indices_subset3, indices_position3, brick_data_annual_subset_mean, indices4) # remove objects that are not needed 
     

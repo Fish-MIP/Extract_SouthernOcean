@@ -78,50 +78,6 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
 
 ```
 
-### check provided SO mask 
-
-```{r}
-
-# mask<-nc_open("/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc")
-# print(mask)
-# 
-# # 15 variables
-# # 5 dimensions (t lat and lon, time, u lat and long)
-# 
-# lon_tcell <- ncvar_get(mask, "xt_ocean")
-# lat_tcell <- ncvar_get(mask, "yt_ocean")
-# lon_tcell <- ncvar_get(mask, "xt_ocean") # keep going
-# t <- as.character(nc.get.time.series(mask))
-# 
-# # variables: geolat_c, geolon_c, geolat_t, geolon_t, dxt, dyt, dxu, dyu, area_t, area_u, kmt, kmu, drag_coeff,
-# 
-# #get the variable in "matrix slices"
-# 
-# lswt_array <- ncvar_get(mask, "dxt") # understandable ...
-# lswt_array <- ncvar_get(mask, "kmt")
-# dim(lswt_array)
-# image(lswt_array)
-# 
-# fillvalue <- ncatt_get(mask, "ht", "_FillValue")
-# dim(lswt_array) #to check; this should give you 24 23 2622
-# #right away let's replace the nc FillValues with NAs
-# lswt_array[lswt_array==fillvalue$value] <- NA
-# lswt_array
-# image(lswt_array)
-
-# use World_Seas_IHO_v3 from https://www.marineregions.org/gazetteer.php?p=details&id=1907
-# or LME 66 from Julia's fishMIp repo in Dropbox and used for the LME example she created. LME 61 is the Antarctic. 
-
-# inside the function now 
-# library(sf)
-# shape<-st_read("/home/ubuntu/extract_SouthernOcean/Input/LME66/LMEs66.shp")
-# library(dplyr)
-# unique(shape$LME_NAME)
-# ant<-shape[47,] # south east Australia # WARNING - why is this 47 instead of 61???? 
-# plot(ant)
-
-```
-
 ### Read in files and extract modelled data at global scale
 
 ```{r step 1 to 2}
@@ -166,10 +122,14 @@ names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 
 ```{r}
 
-save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_month_WS.RData")
+# codes to explore some differences between appraoches (all sorted): 
+# month = annual /12 
+# WS = World_Seas_IHO_v3
+# 5 = including macroecological 
+# 60 = -60 lat
+# checks done with g m-2 values. 
 
-# # FINAL NAME - REMOVE ALL OUTPUTS ONCE DETERMINED THE ERROR 
-# save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
+save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 ```
 
@@ -177,14 +137,14 @@ save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOce
 
 ```{r}
 
-rm(list=ls())
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_month_WS.RData")
+# rm(list=ls())
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 # do size classes 2:5 that are in common to all models 
 
 mean <-list()
 
-for(i in 2:5){
+for(i in 2:5){ # note - this becomes 1:5 for WS option (or any other polygon). 
 
   trial<-stack(
     brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[i]],
@@ -202,19 +162,26 @@ for(i in 2:5){
    
 }
 
-# do size class 1 where macroecological is available but not boats 
+# do size class 1 where macroecological is available but not boats
 
 trial_1<-stack(
     brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[1]],
-    brick_data_annual_subset_mean_ant$dbpm_ipsl_historical[[1]], 
+    brick_data_annual_subset_mean_ant$dbpm_ipsl_historical[[1]],
     brick_data_annual_subset_mean_ant$ecotroph_gfdl_historical[[1]],
     brick_data_annual_subset_mean_ant$ecotroph_ipsl_historical[[1]],
     brick_data_annual_subset_mean_ant$macroecological_gfdl_historical[[1]],
     brick_data_annual_subset_mean_ant$macroecological_ipsl_historical[[1]],
-    brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[1]], 
+    brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[1]],
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[1]])
 
 mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = T)
+
+# ### checking means and whether they make sense given single models - phase 1
+# trial_1 # for WS_5_60: 
+# (7.246053+53.081787+70.417564+39.263441+306.929849+112.348098+61.729895+53.103343)/8 # 88 does not seem to make sense given max value in map is ~120. But this is becasue for some grid cell only a subset of models is available (hence e.g. (70+330+112)/3 = 123). these are mostly GFDL models. This means that na.rm=F would remove these grid cells. in terms of patterns that does not make much difference but in terms of max values it does and a this is due to a few coastal cells. See Phase 2 below.     
+#
+# trial_1 ## for 5_60 (or vice versa) 
+# (7+50+300+35+250+100+60+50)/8 # model n.3 is the only different one. 
 
 # do size class 6 where boats and macroecological are not available
 
@@ -229,40 +196,53 @@ trial_6<-stack(
 mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = T)
 
 # append all data together 
-mean_all<-append(mean_1, mean)
-mean_all<-append(mean_all, mean_6)
+mean_all<-append(mean, mean_6)
+mean_all<-append(mean_1, mean_all)
 mean_all[sapply(mean_all, is.null)] <- NULL
 
-# CHECK 
-# calculate mean using other approach for size class 2 and compare results to above approach 
+# CHECK - OK
+# calculate mean using other approach for size class 2 and compare results to above approach
 
-trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 1) 
+trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 2)
 trial[sapply(trial, is.null)] <- NULL
 
-trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x))) 
+trial2$model = gsub("[^a-zA-Z]", "", rownames(trial2))
 
 trial3<-do.call(rbind.data.frame, trial2)
-trial4<-trial3 %>% 
-  group_by(x,y) %>% 
-  summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
-  ungroup
-
-trial4<-trial4 %>%  filter(y < -60)
+trial4<-trial3 %>%
+  group_by(x,y) %>%
+  summarise(mean = mean(index_1, na.rm=FALSE)) %>%
+  ungroup()
 
 trial_raster<-rasterFromXYZ(trial4)
 
 # same outputs but trial_raster includes higher lats (empty...)
 plot(trial_raster)
-plot(mean_all[[1]])
+plot(mean_all[[2]])
+
+# ### checking means and whether they make sense given single models - phase 2
+# filter(trial4, trial4$mean == max(trial4$mean))
+# #      x     y  mean
+# #   <dbl> <dbl> <dbl>
+# # 1  172. -77.5  134.
+# 
+# filter(trial3, x == 172.5, y == -77.5)
+# #                                          x     y   index_1
+# # ecotroph_gfdl_historical.4208        172.5 -77.5  51.87132
+# # macroecological_gfdl_historical.4211 172.5 -77.5 304.14745
+# # zoomss_gfdl_historical.4211          172.5 -77.5  45.57561
+# 
+# # However, here na.rm=TRUE is == to na.rm=FALSE because, by default, rasterToPoints() omits the NA values. options to change this but not straightforward...  
 
 ##### check outputs and reason in comparison with size-spectrum paper 
-plot(mean_all[[1]]) #15   
-plot(mean_all[[2]]) #15  
-plot(mean_all[[3]]) #12  
-plot(mean_all[[4]]) #12   
-plot(mean_all[[5]]) #10   
-plot(mean_all[[6]]) #5   
+# cannot compare to these ones as they are up to -40 lat
+plot(mean_all[[1]])    
+plot(mean_all[[2]])   
+plot(mean_all[[3]])   
+plot(mean_all[[4]])    
+plot(mean_all[[5]])    
+plot(mean_all[[6]])  
 
 ```
 
@@ -270,10 +250,8 @@ plot(mean_all[[6]]) #5
 
 ```{r}
 
+save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
 
-# 2 is jutst to check that results are differnt from previous version (see email to Philip and repeat alysis without data transformation) only becasue of data transformation and different spatial coverage 
-save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means2.RData")
-
-# save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
+# 01_extract_modelled_data_SO_WS_5_60.RData = original sent to Philip as first draft # differences using the latitudinal bands approach are explained inside the function and are due to EcoTroph but nothing to consider further. The final data is OK
 
 ```

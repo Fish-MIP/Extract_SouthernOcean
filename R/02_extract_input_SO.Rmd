@@ -90,7 +90,6 @@ netcdf_phyto= list("gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_mont
 netcdf_zoo= list("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
                  "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
 
-
 # apply function in // ----
 
 phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
@@ -141,19 +140,12 @@ trial_raster<-rasterFromXYZ(trial4)
 plot(trial_raster)
 plot(mean_phyto)
 
-#### WARNING - very different from before - is this becasue of changes in units?? ALOS CONSIDER that now you are looking at a DIFFERENT SPATIAL COVERAGE OF DATA (-60 before, -35 now)
-# check files and means 
-plot(mean_phyto)
-plot(mean_zoo)
-
 ```
 
 ## save means 
 
 ```{r}
 
-# 2 is jutst to check that results are differnt from previous version (see email to Philip and repeat alysis without data transformation) only becasue of data transformation and different spatial coverage 
-save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means2.RData")
-# save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
 
 ```
