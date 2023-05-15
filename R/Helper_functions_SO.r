@@ -141,6 +141,10 @@ extract_antarctica<-function(netcdf, file = "new"){
   }
   
   # calculate annual means
+  # WARNING - try median instead 
+  
+  
+  
   # https://gis.stackexchange.com/questions/257090/calculating-and-displaying-mean-annual-precipitation-from-cru-data
   # create vector to serve as index
   
@@ -183,6 +187,10 @@ extract_antarctica<-function(netcdf, file = "new"){
   # plot(brick_data_annual_subset[[5]][[10]])
   
   # mean
+  # WARNING - try median instead 
+  
+  
+  
   indices4<-rep(1, length(indices_subset3))
   brick_data_annual_subset_mean<-lapply(brick_data_annual_subset, FUN = function(x) stackApply(x, indices=indices4, fun=mean))
   # # CHECK 
@@ -457,6 +465,10 @@ extract_antarctica_inputs<-function(netcdf){
     }
     
     # calculate annual means
+    # WARNING - try median instead 
+    
+    
+    
     # https://gis.stackexchange.com/questions/257090/calculating-and-displaying-mean-annual-precipitation-from-cru-data
     # create vector to serve as index
     
@@ -490,6 +502,11 @@ extract_antarctica_inputs<-function(netcdf){
     # plot(brick_data_annual_subset[[10]])
     
     # mean
+    # WARNING - try median instead - see plots 
+    
+    
+    
+    
     indices4<-rep(1, length(indices_subset3))
     brick_data_annual_subset_mean<-stackApply(brick_data_annual_subset, indices=indices4, fun=mean)
     

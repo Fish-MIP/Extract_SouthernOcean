@@ -93,7 +93,7 @@ netcdf_zoo= list("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthl
 # apply function in // ----
 
 phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
-# are nomes OK?? TO CHECK 
+# are names OK?? TO CHECK 
 names(phyto_ant) <- netcdf_phyto
 
 zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
@@ -113,17 +113,22 @@ save(phyto_ant, zoo_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_
 
 ```{r}
 
+rm(list=ls())
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+
 # combine outputs and average
 file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
-mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = T)
+mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = F)
+
+plot(mean_phyto) 
 
 file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
-mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = T)
+mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = F)
 
 # CHECK 
 # calculate mean using other approach for size class 2 and compare results to above approach 
 
-trial<-list(phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`, phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`)
+trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
 
 trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
 for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
@@ -138,7 +143,7 @@ trial_raster<-rasterFromXYZ(trial4)
 
 # same outputs but trial_raster includes higher lats (empty...)
 plot(trial_raster)
-plot(mean_phyto)
+plot(mean_zoo)
 
 ```
 
@@ -146,6 +151,6 @@ plot(mean_phyto)
 
 ```{r}
 
-save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
 
 ```

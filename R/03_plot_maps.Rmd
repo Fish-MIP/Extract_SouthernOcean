@@ -55,14 +55,14 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 
 ```{r}
 
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
-ls()
-mean_all
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+# ls()
+# mean_all
 
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
-ls()
-mean_phyto
-mean_zoo
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+# ls()
+# mean_phyto
+# mean_zoo
 
 ```
 
@@ -85,10 +85,10 @@ antmap <- ne_countries(scale = 'medium', type = 'map_units',returnclass = 'sf') 
 antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -40) # if you do -35 you get the same land plot as Yang. et al. 2022
 # WARNING - not understanding why the problem is solved here.... 
 # # problem here - solved using https://github.com/r-spatial/sf/issues/1902
-# sf_use_s2(FALSE)
-# antmap2 <- st_make_valid(antmap2)
-# antmap2 <- st_crop(antmap2, xmin = -180, xmax = 180, ymin = -90, ymax = -50)
-# ggplot() + geom_sf(data = antmap2) + theme_bw()
+sf_use_s2(FALSE)
+antmap2 <- st_make_valid(antmap)
+antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -50)
+ggplot() + geom_sf(data = antmap2) + theme_bw()
 
 # from sf to spatialPoligonDataframe 
 antmap <- as_Spatial(antmap2)
@@ -102,6 +102,9 @@ circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs 
 ###### produce maps 
 
 ## WARNING - might be better to loop to avoid mistakes ..... 
+
+####### FIG 1 
+
 # phytoplankton  
 min = 0
 max = 8.75 # as per Yang et al. 2022 
@@ -120,47 +123,69 @@ min = 0
 max = 25 # as per Yang et al. 2022 
 legend_name = "g C m-2"
   
+plot(mean_zoo)
+
 zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max) # almost empty high number so adjustng the range
 
 zoo_plot<-zoo_plot+ggtitle("B) Zooplankton")
 
-# tcb limits size equal to all size classes 
-min = 0
-max = 50 
+###### FIG S1 
+
+min = 0.5
+max = 5
+
+# phytoplankton  
 legend_name = "g C m-2"
 
-min = mean_all[[1]]@data@min
+phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+
+phyto_plot2<-phyto_plot2+ggtitle("A) Phytoplankton")
+
+# Zooplankton 
+legend_name = "g C m-2"
+  
+zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max) 
+
+zoo_plot2<-zoo_plot2+ggtitle("B) Zooplankton")
+
+###### FIG S2 
+
+# tcb limits size equal to all size classes 
+legend_name = "g C m-2"
+
+mean_all[[3]]@data@min
+mean_all[[3]]@data@max
 plot(mean_all[[1]])
 
-size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = 0.5, max = 5)
+size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size1_plot<-size1_plot+ggtitle("A) Total Consumers Biomass 1-10g")
 
 plot(mean_all[[2]])
 
-size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min =  0.5, max = 5)
+size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size2_plot<-size2_plot+ggtitle("B) Total Consumers Biomass 10-100g")
 
 plot(mean_all[[3]])
 
-size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min =  0.5, max = 5)
+size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size3_plot<-size3_plot+ggtitle("C) Total Consumers Biomass 100g-1kg")
 
 plot(mean_all[[4]])
 
-size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min =  0.5, max = 5)
+size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size4_plot<-size4_plot+ggtitle("D) Total Consumers Biomass 1-10kg")
 
 plot(mean_all[[5]])
 
-size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min =  0.5, max = 5)
+size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size5_plot<-size5_plot+ggtitle("E) Total Consumers Biomass 10-100kg")
 
-size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min =  0.5, max = 5)
+size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
 
 size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass 100kg-1t")
 
@@ -172,19 +197,30 @@ size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass 100kg-1t")
 
 library(patchwork)
 
-# NOT SURE WHY IT CANNOT PRINT IN RIGHT FOLDER...
-# phyto and zooplankton fig 
-jpeg("/home/ubuntu/Extract_SouthernOcean/Output/Fig1.jpg", width = 5, height = 5, units = "in", res = 300, bg = "transparent")
+# WARNINIG 
+# try na.rm = F when mean across models to explore coastal patterns where only GFDL-driven models are available. the yellow coastal cells disapper. 
+# phyto and zoo (Fig.5) are different when doing na.rm = T or F because the scale considered changes (i.e. smallest and largest values are removed when na.rm = F for zoo in particular). range of values are smaller and closer together.  
+
+# phyto and zooplankton fig 5
+jpeg("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_narmF.jpg", width = 5, height = 5, units = "in", res = 300, bg = "transparent")
 phyto_plot+zoo_plot
 dev.off()
 
-# tcb by size class 
+# phyto and zooplankton fig S1 
+p_final<-phyto_plot2+zoo_plot2+
+  plot_layout(ncol = 2, nrow = 1, guides = 'collect')
+
+jpeg("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_narmF.jpg", width = 10, height = 10, units = "in", res = 300, bg = "transparent")
+p_final
+dev.off()
+
+# tcb by size classes FigS2
 p_final<-size1_plot+size2_plot+
   size3_plot+size4_plot+
   size5_plot+size6_plot+
   plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-jpeg("/home/ubuntu/Extract_SouthernOcean/Output/Fig2.jpg", width = 10, height = 10, units = "in", res = 300, bg = "transparent")
+jpeg("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_narmF.jpg", width = 10, height = 10, units = "in", res = 300, bg = "transparent")
 p_final
 dev.off()
 
