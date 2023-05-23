@@ -6,9 +6,24 @@
 
 extract_antarctica<-function(netcdf, file = "new"){
   
-  # # trial
-  # netcdf = "ecotroph_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"
+  # trial
+  # netcdf = "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"  
   # file = "new"
+  
+  # # list of files 
+  # [1] "apecosm_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"          
+  # [2] "apecosm_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"       
+  # [3] "boats_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1950_2014.nc"            
+  # [4] "boats_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1950_2014.nc"         
+  # [5] "dbpm_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"             
+  # [6] "dbpm_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"          
+  # [7] "ecotroph_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"          
+  # [8] "ecotroph_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"       
+  # [9] "macroecological_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"   
+  # [10] "macroecological_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"
+  # [11] "zoomss_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"            
+  # [12] "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc" 
+  
 
   if(file.exists(file.path(dir, netcdf))){
   
@@ -116,7 +131,7 @@ extract_antarctica<-function(netcdf, file = "new"){
   # # CHECK
   # dim(brick_data[[1]])
   # plot(brick_data[[1]][[1004]])
-  # plot(brick_data[[5]][[dim(brick_data[[2]])[3]]])
+  # plot(brick_data[[4]][[dim(brick_data[[2]])[3]]])
   
   ##### WARNING - extent problem for dbpm and zoom ipsl: different than for other models 
   # in general, extent is different (shifted by 0.5 deg) from what is specified in lat and lon
@@ -221,10 +236,14 @@ extract_antarctica<-function(netcdf, file = "new"){
   # WARNING - dealing with different extent for Zoom and DBPM IPSL before extracting data  
   if(stLon != -179.5){
     
+    # ## CHECK 
+    # brick_data_annual_subset_mean
+    # plot(brick_data_annual_subset_mean[[1]])
+    
     # New extent 
     bb <- extent(-180, 180, -90, 90) 
     # trial<-setExtent(brick_data_annual_subset_mean[[1]], bb, keepres=FALSE) 
-    # WARNING keepres=FALSE changes the resolution, the alternative = TRUE changes 
+    # WARNING keepres=FALSE changes the resolution (but not in Zoom??), the alternative = TRUE changes 
     # the number of columns 
     # OK for now but needs more checking  
     
@@ -232,6 +251,9 @@ extract_antarctica<-function(netcdf, file = "new"){
       brick_data_annual_subset_mean[[i]]<-setExtent(brick_data_annual_subset_mean[[i]], bb, keepres=FALSE) 
     }
     
+    # ## CHECK 
+    # brick_data_annual_subset_mean
+    # plot(brick_data_annual_subset_mean[[1]])
   }
   
   # SELECT SO polygon:  

@@ -42,11 +42,13 @@ Extent is different for dbpm and zoom IPSL - now dealt with it but **needs more 
 
 **Check better** extent, crs, crop and mask inside function and in general 
 
+**Check better** file orientation (upside-down?) - checked and plots are OK when using raster. nmihgt also be good to check if it is still all OK when cutting SO lat (but it should).  
+
 Final values are mean g m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values we average instead of sum across months. For NPP and catch we would sum across months to get yearly value as these are rates with a time dimension.      
 
 To transform from g m-2 to g C m-2 for better comparison with inputs I did /10   
 
-MACROECOLOGICAL: 5 bins, data is extracted but not sure whether I should include it in the multi-model mean as I don't know which classes these are (likely 1 to 5 though as specified in bins names). **Ryan will check**
+MACROECOLOGICAL: 5 bins, data is extracted but not sure whether I should include it in the multi-model mean as I don't know which classes these are (likely 1 to 5 though as specified in bins names). Yes - Ryan checked. 
 
 ### Set environment 
 
