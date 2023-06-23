@@ -11,6 +11,12 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### NOTEs from editor 
+
+in all the figures, we will need to avoid the use of the rainbow color scale. This is another benefit of re-plotting. Instead, please use a single colour intensity scale or otherwise see https://www.nature.com/articles/s41467-020-19160-7 for options of other scientific colour scales.
+
+In general, something to be aware of: all figures must be provided in high resolution (min 300dpi), editable format (PDF, EPS or AI). This is so that the art editors can modify them to conform with style, later in the process. If figures are produced one program and modified in another before being coverted to EPS/PDF, the ‘placed’ images are not editable. PNG or PJEG are not editable. I mention this now to save time later as you may well revise the figures based on referee comments.
+
 ### Set environment 
 
 ```{r environment, echo = FALSE}

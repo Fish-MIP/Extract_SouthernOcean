@@ -1,0 +1,105 @@
+---
+title: "Explore and consider empirical data from Yang et al. 2022"
+author: "Camilla Novaglio"
+date: "22/05/2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### AIM
+
+consider phyto and zooplankton data fro Yang et al. 2022
+
+### Data source 
+
+provided by and moved to: 
+
+scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/desktop/lno12219-sup-0001-datas1.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
+
+### Set environment 
+
+```{r environment, echo = FALSE}
+
+rm(list=ls())
+
+library(raster) 
+library(ggplot2) 
+library(dplyr)
+library(sf)
+library(rnaturalearth)
+
+select<-dplyr::select
+summarise<-dplyr::summarise
+
+```
+
+## Load adn explore data  
+
+```{r}
+
+emp<-read.csv("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/lno12219-sup-0001-datas1.csv")
+
+head(emp)
+
+# # the finla data format needs to be like the modelled one: 
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+# mean_all[[1]] # raster for size class 1 map
+# class      : RasterLayer 
+# dimensions : 38, 360, 13680  (nrow, ncol, ncell)
+# resolution : 1, 1  (x, y)
+# extent     : -180, 180, -78, -40  (xmin, xmax, ymin, ymax)
+# crs        : +proj=longlat +datum=WGS84 +no_defs 
+# source     : memory
+# names      : index_1 
+# values     : 1.37047, 7.065759  (min, max)
+
+# Just explore randomly 
+colnames(emp)<-c(
+  "lon", "lat", "year", "month", "day", "vessel", "topDepthNet", "bottomDepthNet", "recorType", "originalBio", "unit", "meshSize", "carbonBio", "net", "wholeVsCopepode", "methodBio", "nStations", "MPA", "dataSource" 
+)
+
+emp<-emp %>% 
+  select(-c(dataSource, methodBio))
+
+# How do we distinguish between phyto and zooplankton? 
+unique(emp$wholeVsCopepode)
+
+# NOTE carbonBio = "Standardised carbon biomass (gC. m-2, 0-250 m, 200 ??m mesh)" from original dataset
+# Do we use this value only and average across all records?
+# Do we average across months then years than whole period? 
+# Do we exclude some months/year or records in general? 
+
+emp2<-emp %>% 
+  group_by(lon,lat,year, month) %>% 
+  summarise(meanBio = mean(carbonBio)) %>% 
+  ungroup() %>% 
+  group_by(lon,lat,year) %>% 
+  summarise(meanBio = mean(meanBio)) %>% 
+  ungroup() %>%
+  group_by(lon,lat) %>% 
+  summarise(meanBio = mean(meanBio)) %>% 
+  ungroup()
+
+# grid cells not regular
+# round values to fix this
+# is it OK? 
+# Should this be done before averaging biomass across time? 
+emp2<-emp2 %>% 
+  mutate(lon = round(lon), 
+         lat = round(lat)) %>% 
+  group_by(lon, lat) %>% 
+  summarise(meanBio = mean(meanBio)) %>% 
+  ungroup()
+ 
+# transform in raster to explore
+# need to specify CRS? 
+emp2_raster<-rasterFromXYZ(emp2) 
+plot(emp2_raster)
+
+```
+
