@@ -12,7 +12,7 @@ plot_SO<-function(wmap_df = antmap_df,
   
   # # trial
   # wmap_df = antmap_df
-  # data_to_plot = mean_phyto
+  # data_to_plot = phyt_raster
   # proj = circumpolarCRS
   # legend_name = "g C m-2"
   # min = 0
@@ -33,15 +33,22 @@ plot_SO<-function(wmap_df = antmap_df,
   
   p1<-ggplot() +
     geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey40", color=NA, linewidth = 0.25) +
-    geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+    # geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+    geom_sf(data=data_to_plot, colour = NA, aes(fill = layer))+
     # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned  
     scale_fill_viridis_b(guide = guide_colorbar(
       title = legend_name, 
       title.position = "top", 
       title.hjust = 0.5), 
       option = "D", 
-      breaks = seq(min, max, length.out = 5),
-      labels = format(round(seq(min, max, length.out = 5), digits = 2), nsmall = 2),
+      # breaks = seq(min, max, length.out = 5),
+      # labels = format(round(seq(min, max, length.out = 5), digits = 2), nsmall = 2),
+      # # for empirical data instead do fo zooplnankton:
+      # breaks = c(0,0.5,1,2,3,5,10,25),
+      # labels = c(0,0.5,1,2,3,5,10,25),
+      # for empirical data instead do fo phytoplnankton:
+      breaks = c(0,0.5,1.25,2.5,3.75,5,6.25,8.27),
+      labels = c(0,0.5,1.25,2.5,3.75,5,6.25,8.27),
       limits=c(min, max), 
       oob = scales::squish, 
       na.value = "black" # not working

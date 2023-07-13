@@ -70,6 +70,10 @@ load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narm
 # mean_phyto
 # mean_zoo
 
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+# phyt_raster ### WARNING - change names to better distinguish modelled vs empirical
+# zoop_raster
+
 ```
 
 ## Map means 
@@ -108,12 +112,51 @@ circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs 
 ###### produce maps 
 
 ## WARNING - might be better to loop to avoid mistakes ..... 
+## TO FIX IN FUNCTION aes(fill = index_1) for all modelled data and aes(fill = layer) fo empirical data - I don't know why and how to change this in previous code ...
+
+####### Empirical data - to add to figs below 
+
+
+
+
+
+source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
+# phytoplankton  
+min = 0
+max = 8.75 # as per Yang et al. 2022
+legend_name = "g C m-2"
+
+phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+phyto_emp_plot
+
+# phyto_emp_plot<-phyto_emp_plot+ggtitle("A) Phytoplankton empirical")
+
+source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
+# zooplankton  
+min = 0
+max = 25 # as per Yang et al. 2022
+legend_name = "g C m-2"
+
+zoo_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+zoo_emp_plot
+
+# zoo_emp_plot<-zoo_emp_plot+ggtitle("B) Zooplankton empirical")
+
+
+
+
+
+
+
+
+
+
 
 ####### FIG 1 
 
 # phytoplankton  
-min = 0
-max = 8.75 # as per Yang et al. 2022 
+# min = 0
+# max = 8.75 # as per Yang et al. 2022 
 legend_name = "g C m-2"
 
 phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max)
@@ -125,8 +168,8 @@ phyto_plot<-phyto_plot+ggtitle("A) Phytoplankton")
 # plot(mean_phyto)
 
 # mesozooplankton limits 
-min = 0
-max = 25 # as per Yang et al. 2022 
+# min = 0
+# max = 25 # as per Yang et al. 2022 
 legend_name = "g C m-2"
   
 plot(mean_zoo)
