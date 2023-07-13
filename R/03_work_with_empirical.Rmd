@@ -17,9 +17,14 @@ consider phyto and zooplankton data fro Yang et al. 2022
 
 ### Data source 
 
-provided by and moved to: 
+provided by Svenja and moved to: 
 
-scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/desktop/lno12219-sup-0001-datas1.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
+*NOT WORKING* need to ask Geli... 
+In the meantime I uploaded the files into the project 
+
+scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/Desktop/SouthernOcean_data/chla_summer_data.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
+
+scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/Desktop/SouthernOcean_data/zooplankton_summer_data.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
 
 ### Set environment 
 
@@ -32,6 +37,7 @@ library(ggplot2)
 library(dplyr)
 library(sf)
 library(rnaturalearth)
+library(data.table)
 
 select<-dplyr::select
 summarise<-dplyr::summarise
@@ -42,9 +48,25 @@ summarise<-dplyr::summarise
 
 ```{r}
 
-emp<-read.csv("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/lno12219-sup-0001-datas1.csv")
+# zoop<-fread("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/zooplankton_summer_data.csv")
 
-head(emp)
+zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/Zooplankton_summer_data.csv", data.table = FALSE)
+head(zoop)
+# from Email Svenja 
+# you can find the "summer data" (n=2028) in sheet 2 of the attachment. The mean biomass in each cell (2° latitude × 5° logitiude) is just the simple arithmetic mean of all biomass in that cell. For example, if 40 records were found in a specific cell (160°E-165°E, 60°S-62°S), the value shown in our Fig. 2b is the mean of these 40 value. You can use "fishnet" tool in Arcgis (Arctoolbox/Data Management Tools/Sampling/Create Fishnet) to finish the average procedure. I wish this helps and feel free to contact me if you have any questions about the data or the use of Arcgis.
+
+# define the bounding box 
+min(zoop$Longitude)
+max(zoop$Longitude)
+# -180, 180
+
+min(zoop$Latitude)
+max(zoop$Latitude)
+# -78.4, -35.183 # the modelled data is -78, -40 
+
+phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
+# from Email Svenja 
+# Please find attached the Chl-a data from Guang to plot the circumpolar phytoplankton data. If I understood correctly, the data are in Chl mg m-3. To convert to depth-integrated g Chl m-2, you need to multiply the values by 41. Then, they assumed a C:Chl-a ratio of 60.5.
 
 # # the finla data format needs to be like the modelled one: 
 # load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
@@ -58,48 +80,12 @@ head(emp)
 # names      : index_1 
 # values     : 1.37047, 7.065759  (min, max)
 
-# Just explore randomly 
-colnames(emp)<-c(
-  "lon", "lat", "year", "month", "day", "vessel", "topDepthNet", "bottomDepthNet", "recorType", "originalBio", "unit", "meshSize", "carbonBio", "net", "wholeVsCopepode", "methodBio", "nStations", "MPA", "dataSource" 
-)
 
-emp<-emp %>% 
-  select(-c(dataSource, methodBio))
 
-# How do we distinguish between phyto and zooplankton? 
-unique(emp$wholeVsCopepode)
-
-# NOTE carbonBio = "Standardised carbon biomass (gC. m-2, 0-250 m, 200 ??m mesh)" from original dataset
-# Do we use this value only and average across all records?
-# Do we average across months then years than whole period? 
-# Do we exclude some months/year or records in general? 
-
-emp2<-emp %>% 
-  group_by(lon,lat,year, month) %>% 
-  summarise(meanBio = mean(carbonBio)) %>% 
-  ungroup() %>% 
-  group_by(lon,lat,year) %>% 
-  summarise(meanBio = mean(meanBio)) %>% 
-  ungroup() %>%
-  group_by(lon,lat) %>% 
-  summarise(meanBio = mean(meanBio)) %>% 
-  ungroup()
-
-# grid cells not regular
-# round values to fix this
-# is it OK? 
-# Should this be done before averaging biomass across time? 
-emp2<-emp2 %>% 
-  mutate(lon = round(lon), 
-         lat = round(lat)) %>% 
-  group_by(lon, lat) %>% 
-  summarise(meanBio = mean(meanBio)) %>% 
-  ungroup()
- 
 # transform in raster to explore
 # need to specify CRS? 
-emp2_raster<-rasterFromXYZ(emp2) 
-plot(emp2_raster)
+zoop_raster<-rasterFromXYZ(zoop) 
+plot(zoop_raster)
 
 ```
 
