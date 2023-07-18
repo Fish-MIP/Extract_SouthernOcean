@@ -110,15 +110,18 @@ antmap_df <- fortify(antmap)
 circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
 
 ###### produce maps 
-
 ## WARNING - might be better to loop to avoid mistakes ..... 
-## TO FIX IN FUNCTION aes(fill = index_1) for all modelled data and aes(fill = layer) fo empirical data - I don't know why and how to change this in previous code ...
+
+
+
+
+
+
+
+
+
 
 ####### Empirical data - to add to figs below 
-
-
-
-
 
 source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 # phytoplankton  
@@ -126,21 +129,34 @@ min = 0
 max = 8.75 # as per Yang et al. 2022
 legend_name = "g C m-2"
 
-phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+names(phyt_raster)<-"index_1" # WARNING aes(fill = index_1) for modelled data and aes(fill = layer) fo empirical data - possibly due to raster calcualtions, need to check code 
+# use dec-mar data 
+phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "phyto")
 phyto_emp_plot
+
+names(phyt_raster2)<-"index_1"
+# use all summer data
+phyto_emp_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster2, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "phyto")
+phyto_emp_plot2
 
 # phyto_emp_plot<-phyto_emp_plot+ggtitle("A) Phytoplankton empirical")
 
 source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 # zooplankton  
 min = 0
-max = 25 # as per Yang et al. 2022
+max = 25 # 25 # as per Yang et al. 2022
 legend_name = "g C m-2"
 
-zoo_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+names(zoop_raster)<-"index_1"
+zoo_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "zoo")
 zoo_emp_plot
 
 # zoo_emp_plot<-zoo_emp_plot+ggtitle("B) Zooplankton empirical")
+
+
+
+
+
 
 
 
@@ -159,7 +175,7 @@ zoo_emp_plot
 # max = 8.75 # as per Yang et al. 2022 
 legend_name = "g C m-2"
 
-phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max)
+phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max, data_type = "modelled")
 
 phyto_plot<-phyto_plot+ggtitle("A) Phytoplankton")
 
@@ -174,7 +190,7 @@ legend_name = "g C m-2"
   
 plot(mean_zoo)
 
-zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max) # almost empty high number so adjustng the range
+zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled") # almost empty high number so adjustng the range
 
 zoo_plot<-zoo_plot+ggtitle("B) Zooplankton")
 
@@ -186,14 +202,14 @@ max = 5
 # phytoplankton  
 legend_name = "g C m-2"
 
-phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 phyto_plot2<-phyto_plot2+ggtitle("A) Phytoplankton")
 
 # Zooplankton 
 legend_name = "g C m-2"
   
-zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max) 
+zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled") 
 
 zoo_plot2<-zoo_plot2+ggtitle("B) Zooplankton")
 
@@ -206,35 +222,35 @@ mean_all[[3]]@data@min
 mean_all[[3]]@data@max
 plot(mean_all[[1]])
 
-size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size1_plot<-size1_plot+ggtitle("A) Total Consumers Biomass 1-10g")
 
 plot(mean_all[[2]])
 
-size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size2_plot<-size2_plot+ggtitle("B) Total Consumers Biomass 10-100g")
 
 plot(mean_all[[3]])
 
-size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size3_plot<-size3_plot+ggtitle("C) Total Consumers Biomass 100g-1kg")
 
 plot(mean_all[[4]])
 
-size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size4_plot<-size4_plot+ggtitle("D) Total Consumers Biomass 1-10kg")
 
 plot(mean_all[[5]])
 
-size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size5_plot<-size5_plot+ggtitle("E) Total Consumers Biomass 10-100kg")
 
-size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max)
+size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
 
 size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass 100kg-1t")
 

@@ -49,7 +49,7 @@ summarise<-dplyr::summarise
 ```{r}
 
 zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/Zooplankton_summer_data.csv", data.table = FALSE)
-
+head(zoop)
 # from Email Svenja 
 # you can find the "summer data" (n=2028) in sheet 2 of the attachment. The mean biomass in each cell (2° latitude × 5° logitiude) is just the simple arithmetic mean of all biomass in that cell. For example, if 40 records were found in a specific cell (160°E-165°E, 60°S-62°S), the value shown in our Fig. 2b is the mean of these 40 value. You can use "fishnet" tool in Arcgis (Arctoolbox/Data Management Tools/Sampling/Create Fishnet) to finish the average procedure. I wish this helps and feel free to contact me if you have any questions about the data or the use of Arcgis.
 
@@ -59,32 +59,28 @@ colnames(zoop) <- c('X', 'Y', 'Z')
 zoop$Z<-round(zoop$Z, 2)
 
 zoop<-as.matrix(zoop)
+
 e <- extent(zoop[,1:2])
 e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
 # e <- e + 1000 # add this as all y's are the same - no need for your data
 # # this needs to be 2 lat by 5 long 
-# 360/5 # 72 long
-# (78.4)+(-35.183)/2 # 61 row # not sure this is OK 
-# r <- raster(e, ncol=72, nrow=61) 
-# x <- rasterize(zoop[, 1:2], r, zoop[,3], fun=mean)
-# plot(x)
-# the above does not quite match with the original data ...  the row seem wrong as too many
 360/5 
-(78.4)+(-35.183)/1 
-r <- raster(e, ncol=72, nrow=44) 
+((78.4)+(-35.183))/2 
+r <- raster(e, ncol=72, nrow=21) 
 x <- rasterize(zoop[, 1:2], r, zoop[,3], fun=mean)
-# plot(x)
+plot(x)
 
 zoop_raster<-x
 crs(zoop_raster) <- "+proj=longlat +datum=WGS84 +no_defs" # WARNING - needs to make sure this is the correct projection for your raster 
 
-phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
+phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data_Dec_Mar.csv", data.table = FALSE)
 # from Email Svenja 
 # Please find attached the Chl-a data from Guang to plot the circumpolar phytoplankton data. If I understood correctly, the data are in Chl mg m-3. To convert to depth-integrated g Chl m-2, you need to multiply the values by 41. Then, they assumed a C:Chl-a ratio of 60.5.
-
+head(phyt)
 colnames(phyt) <- c('X', 'Y', 'Z')
 phyt$Z<-round(phyt$Z, 2)
-# # not understanding this ... it's way off 
+max(phyt$Z)
+# # not understanding this ... it's way off
 # phyt$Z<-phyt$Z*41
 # max(phyt$Z)
 # phyt$Z<-phyt$Z/60.5
@@ -93,13 +89,35 @@ phyt$Z<-round(phyt$Z, 2)
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
 e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
-r <- raster(e, ncol=72, nrow=44) 
+r <- raster(e, ncol=72, nrow=21) 
 x <- rasterize(phyt[, 1:2], r, phyt[,3], fun=mean)
 # plot(x)
 
 phyt_raster<-x
-# crs(r) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
-crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" # WARNING - needs to make sure this is the correct projection for your raster  
+crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 
+
+phyt2<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
+head(phyt2)
+colnames(phyt2) <- c('X', 'Y', 'Z')
+max(phyt2$Z)
+# phyt2$Z<-round(phyt2$Z, 2)
+# # not understanding this ... it's way off
+# phyt2$Z<-phyt2$Z*41
+# phyt2$Z<-phyt2$Z/60.5
+
+# #### VALUE looks good here 
+# trial<-rasterFromXYZ(phyt2)
+# crs(trial) <- "+proj=longlat +datum=WGS84 +no_defs" 
+
+phyt2<-as.matrix(phyt2)
+e <- extent(phyt2[,1:2])
+e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
+r <- raster(e, ncol=72, nrow=21) 
+x <- rasterize(phyt2[, 1:2], r, phyt2[,3], fun=mean)
+# plot(x)
+
+phyt_raster2<-x
+crs(phyt_raster2) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
 # # the finla data format needs to be like the modelled one: 
 # load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
@@ -113,7 +131,7 @@ crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" # WARNING - needs to m
 # names      : index_1 
 # values     : 1.37047, 7.065759  (min, max)
 
-save(phyt_raster, zoop_raster, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+save(phyt_raster, phyt_raster2, zoop_raster, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
 
 ```
 

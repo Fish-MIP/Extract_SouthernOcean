@@ -8,7 +8,8 @@ plot_SO<-function(wmap_df = antmap_df,
                   proj = circumpolarCRS, 
                   legend_name = legend_name,
                   min = min, 
-                  max = max){
+                  max = max,
+                  data_type = "modelled"){
   
   # # trial
   # wmap_df = antmap_df
@@ -17,6 +18,7 @@ plot_SO<-function(wmap_df = antmap_df,
   # legend_name = "g C m-2"
   # min = 0
   # max = 0.1
+  # data_type = "phyto"
   
   # convert rasterLayer to sf object and consider circumpolar projections within function
   data_to_plot <- rasterToPolygons(data_to_plot) # convert Rasterlayer to spatial polygon dataframe 
@@ -31,24 +33,30 @@ plot_SO<-function(wmap_df = antmap_df,
   # in collaboration with ggplot function:
   # coord_sf(xlim = disp_win_coord[,'X'], ylim = disp_win_coord[,'Y'], datum = target_crs, expand = FALSE)
   
+  if(data_type == "zoo"){
+    breaks_vector = c(0,0.5,1,2,3,5,10,25)
+    labels_vector = c(0,0.5,1,2,3,5,10,25)
+  }else if (data_type == "phyto"){
+    breaks_vector = c(0,0.5,1.25,2.5,3.75,5,6.25,8.75)
+    labels_vector = c(0,0.5,1.25,2.5,3.75,5,6.25,8.75)
+  }else{
+    breaks_vector = seq(min, max, length.out = 5)
+    labels_vector = format(round(seq(min, max, length.out = 5), digits = 2), nsmall = 2)
+  }
+  
   p1<-ggplot() +
     geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey40", color=NA, linewidth = 0.25) +
-    # geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-    geom_sf(data=data_to_plot, colour = NA, aes(fill = layer))+
+    geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+    # geom_sf(data=data_to_plot, colour = NA, aes(fill = layer))+
+    # geom_sf(data=data_to_plot, colour = NA, aes(fill = Z))+
     # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned  
     scale_fill_viridis_b(guide = guide_colorbar(
       title = legend_name, 
       title.position = "top", 
       title.hjust = 0.5), 
       option = "D", 
-      # breaks = seq(min, max, length.out = 5),
-      # labels = format(round(seq(min, max, length.out = 5), digits = 2), nsmall = 2),
-      # # for empirical data instead do fo zooplnankton:
-      # breaks = c(0,0.5,1,2,3,5,10,25),
-      # labels = c(0,0.5,1,2,3,5,10,25),
-      # for empirical data instead do fo phytoplnankton:
-      breaks = c(0,0.5,1.25,2.5,3.75,5,6.25,8.27),
-      labels = c(0,0.5,1.25,2.5,3.75,5,6.25,8.27),
+      breaks = breaks_vector,
+      labels = labels_vector,
       limits=c(min, max), 
       oob = scales::squish, 
       na.value = "black" # not working
