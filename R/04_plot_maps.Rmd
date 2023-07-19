@@ -15,9 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 in all the figures, we will need to avoid the use of the rainbow color scale. This is another benefit of re-plotting. Instead, please use a single colour intensity scale or otherwise see https://www.nature.com/articles/s41467-020-19160-7 for options of other scientific colour scales.
 
-In general, something to be aware of: all figures must be provided in high resolution (min 300dpi), editable format (PDF, EPS or AI). This is so that the art editors can modify them to conform with style, later in the process. If figures are produced one program and modified in another before being coverted to EPS/PDF, the ‘placed’ images are not editable. PNG or PJEG are not editable. I mention this now to save time later as you may well revise the figures based on referee comments.
-
-### Set environment 
+## Set environment 
 
 ```{r environment, echo = FALSE}
 
@@ -28,6 +26,7 @@ library(ggplot2)
 library(dplyr)
 library(sf)
 library(rnaturalearth)
+library(patchwork)
 
 select<-dplyr::select
 summarise<-dplyr::summarise
@@ -61,22 +60,28 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 
 ```{r}
 
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+# WARNINIG 
+# try na.rm = F when mean across models to explore coastal patterns where only GFDL-driven models are available. the yellow coastal cells disapper. 
+# phyto and zoo (Fig.5) are different when doing na.rm = T or F because the scale considered changes (i.e. smallest and largest values are removed when na.rm = F for zoo in particular). range of values are smaller and closer together.
+
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
 # ls()
 # mean_all
 
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
 # ls()
 # mean_phyto
 # mean_zoo
 
 load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
-# phyt_raster ### WARNING - change names to better distinguish modelled vs empirical
+# phyt_raster 
 # zoop_raster
 
 ```
 
-## Map means 
+## Load land map 
 
 ```{r}
 
@@ -97,7 +102,7 @@ antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -40) # if
 # # problem here - solved using https://github.com/r-spatial/sf/issues/1902
 sf_use_s2(FALSE)
 antmap2 <- st_make_valid(antmap)
-antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -50)
+antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -40) # -40 should cover bothe empirical and modelled data 
 ggplot() + geom_sf(data = antmap2) + theme_bw()
 
 # from sf to spatialPoligonDataframe 
@@ -109,92 +114,85 @@ antmap_df <- fortify(antmap)
 # convert rasterLayer to sf object and consider circumpolar projections within function
 circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
 
-###### produce maps 
-## WARNING - might be better to loop to avoid mistakes ..... 
+```
 
+## Produce maps of data  
 
+```{r}
 
+### Empirical data check ----
 
+# check patterns are as per Yang 
+names(phyt_raster)<-"index_1" 
+legend_name = "g C m-2"
+phyt_raster@data@min
+phyt_raster@data@max
 
+check_phyto<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 8.75, data_type = "phyto")
+check_phyto #  viridis color scale was much better then the monocromatic one ... 
 
+names(zoop_raster)<-"index_1" 
+zoop_raster@data@min
+zoop_raster@data@max # check this better - it also depends on the nrow in 03
 
+check_zoo<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 25, data_type = "zoo")
+check_zoo
 
+### Empirical data for Fig 5 -----
 
-
-####### Empirical data - to add to figs below 
-
-source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 # phytoplankton  
-min = 0
-max = 8.75 # as per Yang et al. 2022
 legend_name = "g C m-2"
 
-names(phyt_raster)<-"index_1" # WARNING aes(fill = index_1) for modelled data and aes(fill = layer) fo empirical data - possibly due to raster calcualtions, need to check code 
-# use dec-mar data 
-phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "phyto")
+phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = phyt_raster@data@min, max = phyt_raster@data@max, data_type = "modelled")
+phyto_emp_plot<-phyto_emp_plot+ggtitle("A) Phytoplankton empirical")
 phyto_emp_plot
 
-names(phyt_raster2)<-"index_1"
-# use all summer data
-phyto_emp_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster2, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "phyto")
-phyto_emp_plot2
-
-# phyto_emp_plot<-phyto_emp_plot+ggtitle("A) Phytoplankton empirical")
-
-source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 # zooplankton  
-min = 0
-max = 25 # 25 # as per Yang et al. 2022
-legend_name = "g C m-2"
+zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = zoop_raster@data@min, max = zoop_raster@data@max, data_type = "modelled")
+zoop_emp_plot<-zoop_emp_plot+ggtitle("B) Zooplankton empirical")
+zoop_emp_plot
 
-names(zoop_raster)<-"index_1"
-zoo_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "zoo")
-zoo_emp_plot
-
-# zoo_emp_plot<-zoo_emp_plot+ggtitle("B) Zooplankton empirical")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####### FIG 1 
+### ESMs data for Fig 5 -----
 
 # phytoplankton  
-# min = 0
-# max = 8.75 # as per Yang et al. 2022 
 legend_name = "g C m-2"
 
 phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max, data_type = "modelled")
+phyto_plot<-phyto_plot+ggtitle("C) Phytoplankton modelled")
 
-phyto_plot<-phyto_plot+ggtitle("A) Phytoplankton")
+# # same res then empirical data? here using the same approach which needs a matrix as input.  
+# mean_phyto_lowres<-mean_phyto
+# mean_phyto_lowres<-rasterToPoints(mean_phyto_lowres)
+# colnames(mean_phyto_lowres) <- c('X', 'Y', 'Z')
+# e <- extent(mean_phyto_lowres[,1:2])
+# e <- extent(-180, 180, -77.5, -40.5) 
+# 360/5
+# ((77.5)+(-40.5))/2
+# r <- raster(e, ncol=72, nrow=19)
+# x <- rasterize(mean_phyto_lowres[, 1:2], r, mean_phyto_lowres[,3], fun=mean)
+# # plot(x)
+# # plot(mean_phyto)
+# mean_phyto_lowres<-x
+# crs(mean_phyto_lowres) <- crs(mean_phyto)
+# names(mean_phyto_lowres)<-"index_1"
+# 
+# phyto_plot_lowres<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto_lowres, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto_lowres@data@min, max = mean_phyto_lowres@data@max, data_type = "modelled")
+# phyto_plot_lowres
+# 
+# phyto_plot_lowres<-phyto_plot_lowres+ggtitle("C) Phytoplankton modelled")
+# 
+# # # check map
+# # phyto_plot
+# # plot(mean_phyto)
+# # phyto_plot_lowres # NOTE legend is different due to averaging
 
-# # check map
-# phyto_plot
-# plot(mean_phyto)
-
-# mesozooplankton limits 
-# min = 0
-# max = 25 # as per Yang et al. 2022 
+# mesozooplankton 
 legend_name = "g C m-2"
-  
-plot(mean_zoo)
 
-zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled") # almost empty high number so adjustng the range
+zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled") 
+zoo_plot<-zoo_plot+ggtitle("D) Zooplankton modelled")
 
-zoo_plot<-zoo_plot+ggtitle("B) Zooplankton")
-
-###### FIG S1 
+### ESMs data for Fig S1 -----
 
 min = 0.5
 max = 5
@@ -203,89 +201,89 @@ max = 5
 legend_name = "g C m-2"
 
 phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
-phyto_plot2<-phyto_plot2+ggtitle("A) Phytoplankton")
+phyto_plot2<-phyto_plot2+ggtitle("A) Phytoplankton modelled")
 
 # Zooplankton 
 legend_name = "g C m-2"
   
 zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled") 
+zoo_plot2<-zoo_plot2+ggtitle("B) Zooplankton modelled")
 
-zoo_plot2<-zoo_plot2+ggtitle("B) Zooplankton")
-
-###### FIG S2 
+### MEMs data for Fig S2 -----
 
 # tcb limits size equal to all size classes 
 legend_name = "g C m-2"
 
-mean_all[[3]]@data@min
-mean_all[[3]]@data@max
-plot(mean_all[[1]])
+# mean_all[[3]]@data@min
+# mean_all[[3]]@data@max
 
 size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
 size1_plot<-size1_plot+ggtitle("A) Total Consumers Biomass 1-10g")
-
-plot(mean_all[[2]])
+# plot(mean_all[[1]])
 
 size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
 size2_plot<-size2_plot+ggtitle("B) Total Consumers Biomass 10-100g")
-
-plot(mean_all[[3]])
+# plot(mean_all[[2]])
 
 size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
 size3_plot<-size3_plot+ggtitle("C) Total Consumers Biomass 100g-1kg")
-
-plot(mean_all[[4]])
+# plot(mean_all[[3]])
 
 size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
 size4_plot<-size4_plot+ggtitle("D) Total Consumers Biomass 1-10kg")
-
-plot(mean_all[[5]])
+# plot(mean_all[[4]])
 
 size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
 size5_plot<-size5_plot+ggtitle("E) Total Consumers Biomass 10-100kg")
+# plot(mean_all[[5]])
 
 size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-
-size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass 100kg-1t")
+size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass >100kg")
+# plot(mean_all[[6]])
 
 ```
 
-### Save fianl plots 
+## Save fianl plots 
 
 ```{r}
 
-library(patchwork)
+#### Fig 5 ----
+p_final<-
+  phyto_emp_plot + zoop_emp_plot +
+  phyto_plot + zoo_plot +
+  plot_layout(ncol = 2, nrow = 2)
 
-# WARNINIG 
-# try na.rm = F when mean across models to explore coastal patterns where only GFDL-driven models are available. the yellow coastal cells disapper. 
-# phyto and zoo (Fig.5) are different when doing na.rm = T or F because the scale considered changes (i.e. smallest and largest values are removed when na.rm = F for zoo in particular). range of values are smaller and closer together.  
+#### WARNING !!!! 
+# ## problem with plot dimension possibly due to empirical zooplankton
+# ## OR need the exact same extent/dimntion/resolution for modelled and empirical... WORK on Empirical 
+# phyt_raster
+# mean_phyto
+# 
+# p_final<-
+#   phyto_emp_plot + phyto_plot +
+#   zoop_emp_plot + zoo_plot +
+#   plot_layout(ncol = 2, nrow = 2)
 
 # phyto and zooplankton fig 5
-jpeg("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_narmF.jpg", width = 5, height = 5, units = "in", res = 300, bg = "transparent")
-phyto_plot+zoo_plot
-dev.off()
-
-# phyto and zooplankton fig S1 
-p_final<-phyto_plot2+zoo_plot2+
-  plot_layout(ncol = 2, nrow = 1, guides = 'collect')
-
-jpeg("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_narmF.jpg", width = 10, height = 10, units = "in", res = 300, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_new.pdf", width = 10, height = 10, bg = "transparent") # FROM jpeg to pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
 p_final
 dev.off()
 
-# tcb by size classes FigS2
-p_final<-size1_plot+size2_plot+
-  size3_plot+size4_plot+
-  size5_plot+size6_plot+
+#### Fig S1 ----
+p_final<-phyto_plot2 + zoo_plot2 +
+  plot_layout(ncol = 2, nrow = 1, guides = 'collect')
+
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_new.pdf", width = 10, height = 10, bg = "transparent")
+p_final
+dev.off()
+
+#### Fig S2 ----
+p_final<-size1_plot + size2_plot +
+  size3_plot + size4_plot +
+  size5_plot + size6_plot +
   plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-jpeg("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_narmF.jpg", width = 10, height = 10, units = "in", res = 300, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_new.pdf", width = 10, height = 10, bg = "transparent")
 p_final
 dev.off()
 

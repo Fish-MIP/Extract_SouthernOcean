@@ -56,17 +56,17 @@ head(zoop)
 # approach 1 - first raster then average 
 # https://gis.stackexchange.com/questions/79062/how-to-make-raster-from-irregular-point-data-without-interpolation
 colnames(zoop) <- c('X', 'Y', 'Z')
-zoop$Z<-round(zoop$Z, 2)
-
+# zoop$Z<-round(zoop$Z, 2)
 zoop<-as.matrix(zoop)
 
 e <- extent(zoop[,1:2])
-e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
+e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
+# e <- extent(-180, 180, -78, -40) # change to match modelled data
 # e <- e + 1000 # add this as all y's are the same - no need for your data
 # # this needs to be 2 lat by 5 long 
-360/5 
-((78.4)+(-35.183))/2 
-r <- raster(e, ncol=72, nrow=21) 
+columns<-360/5 
+rows<-(abs(e[3])-abs(e[4]))/2 
+r <- raster(e, ncol=columns, nrow=rows) 
 x <- rasterize(zoop[, 1:2], r, zoop[,3], fun=mean)
 plot(x)
 
@@ -78,8 +78,7 @@ phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data_Dec_Ma
 # Please find attached the Chl-a data from Guang to plot the circumpolar phytoplankton data. If I understood correctly, the data are in Chl mg m-3. To convert to depth-integrated g Chl m-2, you need to multiply the values by 41. Then, they assumed a C:Chl-a ratio of 60.5.
 head(phyt)
 colnames(phyt) <- c('X', 'Y', 'Z')
-phyt$Z<-round(phyt$Z, 2)
-max(phyt$Z)
+# phyt$Z<-round(phyt$Z, 2)
 # checked with Svenja
 phyt$Z<-phyt$Z*41
 phyt$Z<-phyt$Z*60.5
@@ -87,10 +86,13 @@ phyt$Z<-phyt$Z/1000
 
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
-e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
-r <- raster(e, ncol=72, nrow=21) 
+e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
+# e <- extent(-180, 180, -78, -40) # change to match modelled data
+columns<-360/5 
+rows<-(abs(e[3])-abs(e[4]))/2 
+r <- raster(e, ncol=columns, nrow=rows) 
 x <- rasterize(phyt[, 1:2], r, phyt[,3], fun=mean)
-# plot(x)
+plot(x)
 
 phyt_raster<-x
 crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 

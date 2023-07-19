@@ -11,7 +11,7 @@ plot_SO<-function(wmap_df = antmap_df,
                   max = max,
                   data_type = "modelled"){
   
-  # # trial
+  # # # trial
   # wmap_df = antmap_df
   # data_to_plot = phyt_raster
   # proj = circumpolarCRS
@@ -47,21 +47,34 @@ plot_SO<-function(wmap_df = antmap_df,
   p1<-ggplot() +
     geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey40", color=NA, linewidth = 0.25) +
     geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-    # geom_sf(data=data_to_plot, colour = NA, aes(fill = layer))+
-    # geom_sf(data=data_to_plot, colour = NA, aes(fill = Z))+
-    # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned  
-    scale_fill_viridis_b(guide = guide_colorbar(
-      title = legend_name, 
-      title.position = "top", 
-      title.hjust = 0.5), 
-      option = "D", 
+    
+    # # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned
+    # scale_fill_viridis_b(guide = guide_colorbar(
+    #   title = legend_name,
+    #   title.position = "top",
+    #   title.hjust = 0.5),
+    #   option = "D",
+    #   breaks = breaks_vector,
+    #   labels = labels_vector,
+    #   limits=c(min, max),
+    #   oob = scales::squish,
+    #   na.value = "black" # not working
+    # ) +
+  
+    # https://colorbrewer2.org/#type=sequential&scheme=Blues&n=3
+    scale_fill_gradient(guide = guide_colorbar(
+      title = legend_name,
+      title.position = "top",
+      title.hjust = 0.5),
+      low='#deebf7', 
+      high='#3182bd',
       breaks = breaks_vector,
       labels = labels_vector,
-      limits=c(min, max), 
-      oob = scales::squish, 
-      na.value = "black" # not working
-    ) +
-    scale_x_continuous(expand=c(0,0))+ # this should get rid of the white spece around the map... 
+      limits=c(min, max),
+      oob = scales::squish,
+      na.value = "black" )+
+    
+    scale_x_continuous(expand=c(0,0))+ # this should get rid of the white space around the map... 
     scale_y_continuous(expand=c(0,0))+
     my_theme_map
   
