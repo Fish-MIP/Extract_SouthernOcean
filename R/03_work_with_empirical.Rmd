@@ -80,11 +80,10 @@ head(phyt)
 colnames(phyt) <- c('X', 'Y', 'Z')
 phyt$Z<-round(phyt$Z, 2)
 max(phyt$Z)
-# # not understanding this ... it's way off
-# phyt$Z<-phyt$Z*41
-# max(phyt$Z)
-# phyt$Z<-phyt$Z/60.5
-# max(phyt$Z)
+# checked with Svenja
+phyt$Z<-phyt$Z*41
+phyt$Z<-phyt$Z*60.5
+phyt$Z<-phyt$Z/1000
 
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
@@ -96,28 +95,22 @@ x <- rasterize(phyt[, 1:2], r, phyt[,3], fun=mean)
 phyt_raster<-x
 crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
-phyt2<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
-head(phyt2)
-colnames(phyt2) <- c('X', 'Y', 'Z')
-max(phyt2$Z)
-# phyt2$Z<-round(phyt2$Z, 2)
-# # not understanding this ... it's way off
+# phyt2<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
+# head(phyt2)
+# colnames(phyt2) <- c('X', 'Y', 'Z')
 # phyt2$Z<-phyt2$Z*41
-# phyt2$Z<-phyt2$Z/60.5
-
-# #### VALUE looks good here 
-# trial<-rasterFromXYZ(phyt2)
-# crs(trial) <- "+proj=longlat +datum=WGS84 +no_defs" 
-
-phyt2<-as.matrix(phyt2)
-e <- extent(phyt2[,1:2])
-e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
-r <- raster(e, ncol=72, nrow=21) 
-x <- rasterize(phyt2[, 1:2], r, phyt2[,3], fun=mean)
-# plot(x)
-
-phyt_raster2<-x
-crs(phyt_raster2) <- "+proj=longlat +datum=WGS84 +no_defs" 
+# phyt2$Z<-phyt2$Z*60.5
+# phyt2$Z<-phyt2$Z/1000
+# 
+# phyt2<-as.matrix(phyt2)
+# e <- extent(phyt2[,1:2])
+# e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
+# r <- raster(e, ncol=72, nrow=21) 
+# x <- rasterize(phyt2[, 1:2], r, phyt2[,3], fun=mean)
+# # plot(x)
+# 
+# phyt_raster2<-x
+# crs(phyt_raster2) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
 # # the finla data format needs to be like the modelled one: 
 # load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
@@ -131,7 +124,7 @@ crs(phyt_raster2) <- "+proj=longlat +datum=WGS84 +no_defs"
 # names      : index_1 
 # values     : 1.37047, 7.065759  (min, max)
 
-save(phyt_raster, phyt_raster2, zoop_raster, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+save(phyt_raster, zoop_raster, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
 
 ```
 
