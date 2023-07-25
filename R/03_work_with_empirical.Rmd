@@ -71,7 +71,7 @@ x <- rasterize(zoop[, 1:2], r, zoop[,3], fun=mean)
 plot(x)
 
 zoop_raster<-x
-crs(zoop_raster) <- "+proj=longlat +datum=WGS84 +no_defs" # WARNING - needs to make sure this is the correct projection for your raster 
+crs(zoop_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
 phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data_Dec_Mar.csv", data.table = FALSE)
 # from Email Svenja 
@@ -96,23 +96,6 @@ plot(x)
 
 phyt_raster<-x
 crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 
-
-# phyt2<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data.csv", data.table = FALSE)
-# head(phyt2)
-# colnames(phyt2) <- c('X', 'Y', 'Z')
-# phyt2$Z<-phyt2$Z*41
-# phyt2$Z<-phyt2$Z*60.5
-# phyt2$Z<-phyt2$Z/1000
-# 
-# phyt2<-as.matrix(phyt2)
-# e <- extent(phyt2[,1:2])
-# e <- extent(-180, 180, -78.5, -40) # change from 179.5 to 180 as better for mapping  
-# r <- raster(e, ncol=72, nrow=21) 
-# x <- rasterize(phyt2[, 1:2], r, phyt2[,3], fun=mean)
-# # plot(x)
-# 
-# phyt_raster2<-x
-# crs(phyt_raster2) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
 # # the finla data format needs to be like the modelled one: 
 # load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")

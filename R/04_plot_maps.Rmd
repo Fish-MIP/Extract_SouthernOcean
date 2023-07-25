@@ -13,7 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### NOTEs from editor 
 
-in all the figures, we will need to avoid the use of the rainbow color scale. This is another benefit of re-plotting. Instead, please use a single colour intensity scale or otherwise see https://www.nature.com/articles/s41467-020-19160-7 for options of other scientific colour scales.
+Avoid the use of the rainbow color scale. Instead, please use a single colour intensity scale or otherwise see https://www.nature.com/articles/s41467-020-19160-7 for options of other scientific colour scales.
+
+viridis is accepted for maps and colorbrewer too. 
 
 ## Set environment 
 
@@ -45,10 +47,30 @@ my_theme_map<-theme_bw()+
     panel.background = element_blank(),
     plot.background = element_rect(fill="white"),
     panel.border = element_blank(),
+    # legend.key.height = unit(0.8, "cm"), # this becomes width if you choose bottom position
+    # legend.key.width = unit(0.4, "cm"),
     legend.key.height = unit(0.2, "cm"), # this becomes width if you choose bottom position
-    legend.key.width = unit(0.5, "cm"), 
+    legend.key.width = unit(0.7, "cm"),
     legend.position= 'bottom' # c(0.5,0.6) # in middle
 )
+
+my_theme_map2<-theme_bw()+ 
+  theme(
+    text = element_text(size = 9), 
+    plot.title = element_text(size = 9),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title=element_text(size = 8), 
+    legend.text=element_text(size = 7),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    panel.background = element_blank(),
+    plot.background = element_rect(fill="white"),
+    panel.border = element_blank(),
+    legend.key.height = unit(0.5, "cm"), # this becomes width if you choose bottom position
+    legend.key.width = unit(0.2, "cm")
+  )    
 
 
 # load functions 
@@ -120,6 +142,11 @@ circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs 
 
 ```{r}
 
+# source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
+
+color_scale = "monochromatic"
+# color_scale = "viridis"
+
 ### Empirical data check ----
 
 # check patterns are as per Yang 
@@ -127,29 +154,33 @@ names(phyt_raster)<-"index_1"
 legend_name = "g C m-2"
 phyt_raster@data@min
 phyt_raster@data@max
-
-check_phyto<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 8.75, data_type = "phyto")
+check_phyto<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 8.7, data_type = "phyto", color_scale = "viridis", theme_map = "my_theme_map")
+check_phyto<-check_phyto+ggtitle("a) Phytoplankton empirical")
 check_phyto #  viridis color scale was much better then the monocromatic one ... 
+
 
 names(zoop_raster)<-"index_1" 
 zoop_raster@data@min
 zoop_raster@data@max # check this better - it also depends on the nrow in 03
-
-check_zoo<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 25, data_type = "zoo")
+check_zoo<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 25, data_type = "zoo", color_scale = "viridis", theme_map= "my_theme_map")
+check_zoo<-check_zoo+ggtitle("b) Zooplankton empirical")
 check_zoo
 
 ### Empirical data for Fig 5 -----
 
+# Fig 5 lower panel: Depth integrated phytoplankton and zooplankton carbon concentration projections averaged across the 1990-1999 decade and the two Earth System Models, IPSL-CM6A-LR and GFDL-ESM4, providing climate forcing data for FishMIP Marine Ecosystem Models, ISIMIP3b simulation round. Data available at https://data.isimip.org/. The range of values in the legend spans the minimum and the maximum value of phytoplankton and of zooplankton, respectively. For a comparison with biomass for higher trophic levels see  S-Fig.1 and 2.
+# adding higher pannel with same characteristics. 
+
 # phytoplankton  
 legend_name = "g C m-2"
 
-phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = phyt_raster@data@min, max = phyt_raster@data@max, data_type = "modelled")
-phyto_emp_plot<-phyto_emp_plot+ggtitle("A) Phytoplankton empirical")
+phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = phyt_raster@data@min, max = phyt_raster@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
+phyto_emp_plot<-phyto_emp_plot+ggtitle("a) Phytoplankton empirical")
 phyto_emp_plot
 
 # zooplankton  
-zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = zoop_raster@data@min, max = zoop_raster@data@max, data_type = "modelled")
-zoop_emp_plot<-zoop_emp_plot+ggtitle("B) Zooplankton empirical")
+zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = zoop_raster@data@min, max = zoop_raster@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
+zoop_emp_plot<-zoop_emp_plot+ggtitle("b) Zooplankton empirical")
 zoop_emp_plot
 
 ### ESMs data for Fig 5 -----
@@ -157,8 +188,8 @@ zoop_emp_plot
 # phytoplankton  
 legend_name = "g C m-2"
 
-phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max, data_type = "modelled")
-phyto_plot<-phyto_plot+ggtitle("C) Phytoplankton modelled")
+phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
+phyto_plot<-phyto_plot+ggtitle("c) Phytoplankton modelled")
 
 # # same res then empirical data? here using the same approach which needs a matrix as input.  
 # mean_phyto_lowres<-mean_phyto
@@ -189,10 +220,11 @@ phyto_plot<-phyto_plot+ggtitle("C) Phytoplankton modelled")
 # mesozooplankton 
 legend_name = "g C m-2"
 
-zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled") 
-zoo_plot<-zoo_plot+ggtitle("D) Zooplankton modelled")
+zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map") 
+zoo_plot<-zoo_plot+ggtitle("d) Zooplankton modelled")
 
 ### ESMs data for Fig S1 -----
+# Fig S1. Depth integrated a) phytoplankton and b) zooplankton carbon concentration projections averaged across the 1990-1999 decade and the two Earth System Models, IPSL-CM6A-LR and GFDL-ESM4, providing climate forcing data for FishMIP Marine Ecosystem Models, ISIMIP3b simulation round. Data available at https://data.isimip.org/. The range of values is kept between 0.5 and 5 g C m-2 for better comparison between plots and with maps of total consumers biomass (S-Fig.2). The code used to produce this figure is available at https://github.com/Fish-MIP/Extract_SouthernOcean.
 
 min = 0.5
 max = 5
@@ -200,16 +232,17 @@ max = 5
 # phytoplankton  
 legend_name = "g C m-2"
 
-phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-phyto_plot2<-phyto_plot2+ggtitle("A) Phytoplankton modelled")
+phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+phyto_plot2<-phyto_plot2+ggtitle("a) Phytoplankton modelled")
 
 # Zooplankton 
 legend_name = "g C m-2"
   
-zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled") 
-zoo_plot2<-zoo_plot2+ggtitle("B) Zooplankton modelled")
+zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2") 
+zoo_plot2<-zoo_plot2+ggtitle("b) Zooplankton modelled")
 
 ### MEMs data for Fig S2 -----
+# Fig S2. Depth integrated, size-resolved total consumers biomass averaged across the 1990-1999 decade and six FishMIP Marine Ecosystem Models able to produce this output. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg, f) 100kg-1t. All Marine Ecosystem Models are forced using IPSL-CM6A-LR and GFDL-ESM4 climate data with the exception of two models which are forced using IPSL-CM6A-LR climate data only, for a total of ten ESMs-MEMs combinations. The simulation round considered is the ISIMIP3b, data available at https://data.isimip.org/. The range of values is kept between 0.5 and 5 for all size classes for better comparison across plots and with maps of plankton (S-Fig.1). The code used to produce this figure is available at https://github.com/Fish-MIP/Extract_SouthernOcean.
 
 # tcb limits size equal to all size classes 
 legend_name = "g C m-2"
@@ -217,28 +250,28 @@ legend_name = "g C m-2"
 # mean_all[[3]]@data@min
 # mean_all[[3]]@data@max
 
-size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size1_plot<-size1_plot+ggtitle("A) Total Consumers Biomass 1-10g")
+size1_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[1]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size1_plot<-size1_plot+ggtitle("a) Consumers Biomass 1-10g")
 # plot(mean_all[[1]])
 
-size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size2_plot<-size2_plot+ggtitle("B) Total Consumers Biomass 10-100g")
+size2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[2]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size2_plot<-size2_plot+ggtitle("b) Consumers Biomass 10-100g")
 # plot(mean_all[[2]])
 
-size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size3_plot<-size3_plot+ggtitle("C) Total Consumers Biomass 100g-1kg")
+size3_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[3]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size3_plot<-size3_plot+ggtitle("c) Consumers Biomass 100g-1kg")
 # plot(mean_all[[3]])
 
-size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size4_plot<-size4_plot+ggtitle("D) Total Consumers Biomass 1-10kg")
+size4_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[4]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size4_plot<-size4_plot+ggtitle("d) Consumers Biomass 1-10kg")
 # plot(mean_all[[4]])
 
-size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size5_plot<-size5_plot+ggtitle("E) Total Consumers Biomass 10-100kg")
+size5_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[5]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size5_plot<-size5_plot+ggtitle("e) Consumers Biomass 10-100kg")
 # plot(mean_all[[5]])
 
-size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled")
-size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass >100kg")
+size6_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_all[[6]], proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
+size6_plot<-size6_plot+ggtitle("f) Consumers Biomass >100kg")
 # plot(mean_all[[6]])
 
 ```
@@ -247,25 +280,24 @@ size6_plot<-size6_plot+ggtitle("F) Total Consumers Biomass >100kg")
 
 ```{r}
 
+#### Fig check empirical 
+
+p_final<-
+  check_phyto + check_zoo +
+  plot_layout(ncol = 2, nrow = 1)
+
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig_checkEmpirical.pdf", width = 7, height = 4.4, bg = "transparent")  
+p_final
+dev.off()
+
 #### Fig 5 ----
 p_final<-
   phyto_emp_plot + zoop_emp_plot +
   phyto_plot + zoo_plot +
-  plot_layout(ncol = 2, nrow = 2)
-
-#### WARNING !!!! 
-# ## problem with plot dimension possibly due to empirical zooplankton
-# ## OR need the exact same extent/dimntion/resolution for modelled and empirical... WORK on Empirical 
-# phyt_raster
-# mean_phyto
-# 
-# p_final<-
-#   phyto_emp_plot + phyto_plot +
-#   zoop_emp_plot + zoo_plot +
-#   plot_layout(ncol = 2, nrow = 2)
+  plot_layout(ncol = 2, nrow = 2, heights=c(1,1), widths = c(1,1))
 
 # phyto and zooplankton fig 5
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_new.pdf", width = 10, height = 10, bg = "transparent") # FROM jpeg to pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_new.pdf", width = 7, height = 8.8, bg = "transparent") # FROM jpeg to pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
 p_final
 dev.off()
 
@@ -273,7 +305,7 @@ dev.off()
 p_final<-phyto_plot2 + zoo_plot2 +
   plot_layout(ncol = 2, nrow = 1, guides = 'collect')
 
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_new.pdf", width = 10, height = 10, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_new.pdf", width = 7, height = 3, bg = "transparent")
 p_final
 dev.off()
 
@@ -283,7 +315,7 @@ p_final<-size1_plot + size2_plot +
   size5_plot + size6_plot +
   plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_new.pdf", width = 10, height = 10, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_new.pdf", width = 7, height = 5, bg = "transparent")
 p_final
 dev.off()
 
