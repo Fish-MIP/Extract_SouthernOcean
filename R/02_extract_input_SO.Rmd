@@ -120,31 +120,31 @@ load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
 
 # combine outputs and average
 file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
-mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = F)
+mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = TRUE)
 
 plot(mean_phyto) 
 
 file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
-mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = F)
+mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = TRUE)
 
-# CHECK 
-# calculate mean using other approach for size class 2 and compare results to above approach 
+# # CHECK 
+# # calculate mean using other approach for size class 2 and compare results to above approach 
+# 
+# trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
+# 
+# trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+# for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+# 
+# trial3<-do.call(rbind.data.frame, trial2)
+# trial4<-trial3 %>% 
+#   group_by(x,y) %>% 
+#   summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
+#   ungroup
+# 
+# trial_raster<-rasterFromXYZ(trial4)
 
-trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
-
-trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
-
-trial3<-do.call(rbind.data.frame, trial2)
-trial4<-trial3 %>% 
-  group_by(x,y) %>% 
-  summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
-  ungroup
-
-trial_raster<-rasterFromXYZ(trial4)
-
-# same outputs but trial_raster includes higher lats (empty...)
-plot(trial_raster)
+# # same outputs but trial_raster includes higher lats (empty...)
+# plot(trial_raster)
 plot(mean_zoo)
 
 ```
@@ -153,6 +153,8 @@ plot(mean_zoo)
 
 ```{r}
 
-save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+
+# save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
 
 ```

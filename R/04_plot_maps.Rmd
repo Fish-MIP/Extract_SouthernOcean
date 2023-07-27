@@ -50,7 +50,7 @@ my_theme_map<-theme_bw()+
     # legend.key.height = unit(0.8, "cm"), # this becomes width if you choose bottom position
     # legend.key.width = unit(0.4, "cm"),
     legend.key.height = unit(0.2, "cm"), # this becomes width if you choose bottom position
-    legend.key.width = unit(0.7, "cm"),
+    legend.key.width = unit(1, "cm"),
     legend.position= 'bottom' # c(0.5,0.6) # in middle
 )
 
@@ -68,7 +68,7 @@ my_theme_map2<-theme_bw()+
     panel.background = element_blank(),
     plot.background = element_rect(fill="white"),
     panel.border = element_blank(),
-    legend.key.height = unit(0.5, "cm"), # this becomes width if you choose bottom position
+    legend.key.height = unit(0.7, "cm"), # this becomes width if you choose bottom position
     legend.key.width = unit(0.2, "cm")
   )    
 
@@ -91,8 +91,8 @@ load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_me
 # ls()
 # mean_all
 
-# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
 load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
 # ls()
 # mean_phyto
 # mean_zoo
@@ -144,14 +144,14 @@ circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs 
 
 # source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 
-color_scale = "monochromatic"
-# color_scale = "viridis"
+# color_scale = "monochromatic"
+color_scale = "viridis"
 
 ### Empirical data check ----
 
 # check patterns are as per Yang 
 names(phyt_raster)<-"index_1" 
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 phyt_raster@data@min
 phyt_raster@data@max
 check_phyto<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = 0, max = 8.7, data_type = "phyto", color_scale = "viridis", theme_map = "my_theme_map")
@@ -172,7 +172,7 @@ check_zoo
 # adding higher pannel with same characteristics. 
 
 # phytoplankton  
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 
 phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = phyt_raster@data@min, max = phyt_raster@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
 phyto_emp_plot<-phyto_emp_plot+ggtitle("a) Phytoplankton empirical")
@@ -186,7 +186,7 @@ zoop_emp_plot
 ### ESMs data for Fig 5 -----
 
 # phytoplankton  
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 
 phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = mean_phyto@data@min, max = mean_phyto@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
 phyto_plot<-phyto_plot+ggtitle("c) Phytoplankton modelled")
@@ -218,34 +218,49 @@ phyto_plot<-phyto_plot+ggtitle("c) Phytoplankton modelled")
 # # phyto_plot_lowres # NOTE legend is different due to averaging
 
 # mesozooplankton 
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 
 zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map") 
 zoo_plot<-zoo_plot+ggtitle("d) Zooplankton modelled")
 
-### ESMs data for Fig S1 -----
+### empirical data for Fig S1 -----
+
 # Fig S1. Depth integrated a) phytoplankton and b) zooplankton carbon concentration projections averaged across the 1990-1999 decade and the two Earth System Models, IPSL-CM6A-LR and GFDL-ESM4, providing climate forcing data for FishMIP Marine Ecosystem Models, ISIMIP3b simulation round. Data available at https://data.isimip.org/. The range of values is kept between 0.5 and 5 g C m-2 for better comparison between plots and with maps of total consumers biomass (S-Fig.2). The code used to produce this figure is available at https://github.com/Fish-MIP/Extract_SouthernOcean.
 
 min = 0.5
 max = 5
 
 # phytoplankton  
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 
-phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2")
-phyto_plot2<-phyto_plot2+ggtitle("a) Phytoplankton modelled")
+phyto_plot_emp2<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
+phyto_plot_emp2<-phyto_plot_emp2+ggtitle("a) Phytoplankton empirical")
 
 # Zooplankton 
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
   
-zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2") 
-zoo_plot2<-zoo_plot2+ggtitle("b) Zooplankton modelled")
+zoo_plot_emp2<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map") 
+zoo_plot_emp2<-zoo_plot_emp2+ggtitle("b) Zooplankton empirical")
+
+### ESMs data for Fig S1 -----
+
+# phytoplankton  
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
+
+phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map")
+phyto_plot2<-phyto_plot2+ggtitle("c) Phytoplankton modelled")
+
+# Zooplankton 
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
+  
+zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min, max = max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map") 
+zoo_plot2<-zoo_plot2+ggtitle("d) Zooplankton modelled")
 
 ### MEMs data for Fig S2 -----
 # Fig S2. Depth integrated, size-resolved total consumers biomass averaged across the 1990-1999 decade and six FishMIP Marine Ecosystem Models able to produce this output. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg, f) 100kg-1t. All Marine Ecosystem Models are forced using IPSL-CM6A-LR and GFDL-ESM4 climate data with the exception of two models which are forced using IPSL-CM6A-LR climate data only, for a total of ten ESMs-MEMs combinations. The simulation round considered is the ISIMIP3b, data available at https://data.isimip.org/. The range of values is kept between 0.5 and 5 for all size classes for better comparison across plots and with maps of plankton (S-Fig.1). The code used to produce this figure is available at https://github.com/Fish-MIP/Extract_SouthernOcean.
 
 # tcb limits size equal to all size classes 
-legend_name = "g C m-2"
+legend_name = expression(g~C~m^{-2}) # "g C m-2"
 
 # mean_all[[3]]@data@min
 # mean_all[[3]]@data@max
@@ -297,15 +312,17 @@ p_final<-
   plot_layout(ncol = 2, nrow = 2, heights=c(1,1), widths = c(1,1))
 
 # phyto and zooplankton fig 5
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig5_new.pdf", width = 7, height = 8.8, bg = "transparent") # FROM jpeg to pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/Fig5.pdf", width = 7, height = 8.8, bg = "transparent") # FROM jpeg to pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
 p_final
 dev.off()
 
 #### Fig S1 ----
-p_final<-phyto_plot2 + zoo_plot2 +
-  plot_layout(ncol = 2, nrow = 1, guides = 'collect')
+p_final<-
+  phyto_plot_emp2 + zoo_plot_emp2 +
+  phyto_plot2 + zoo_plot2 +
+  plot_layout(ncol = 2, nrow = 2, heights=c(1,1), widths = c(1,1)) # guides = 'collect'
 
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS1_new.pdf", width = 7, height = 3, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS1.pdf", width = 7, height = 8.8, bg = "transparent")
 p_final
 dev.off()
 
@@ -315,7 +332,7 @@ p_final<-size1_plot + size2_plot +
   size5_plot + size6_plot +
   plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS2_new.pdf", width = 7, height = 5, bg = "transparent")
+pdf("/home/ubuntu/Extract_SouthernOcean/Output/FigS2.pdf", width = 7, height = 5, bg = "transparent")
 p_final
 dev.off()
 

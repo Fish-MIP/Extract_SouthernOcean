@@ -191,7 +191,7 @@ extract_antarctica<-function(netcdf, file = "new"){
     indices_subset3<-indices_subset3[indices_subset3>=1990 & indices_subset3<=1999] # Time period asked by Philip Boyd
   }else if(scenario %in% c("ssp1", "ssp5", "picontrol_fut")){
     indices_subset3<-unique(indices2)
-    indices_subset3<-indices_subset3[indices_subset3>2090 & indices_subset3<=2100] # Future not considered here 
+    indices_subset3<-indices_subset3[indices_subset3>2090 & indices_subset3<=2099] # Future not considered here 
   }
   
   indices_position3<-match(indices_subset3,unique(indices2))
