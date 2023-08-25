@@ -24,7 +24,9 @@ zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration
 
 ### Data source 
 
-Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocl: phytoc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
+Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocl: phyc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
+
+We consider ISIMIP3b data as we have MEM outputs linked to these inputs for ISIMIP3b and not 3a yet. 
 
 scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/GFDL-ESM4/gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
@@ -34,11 +36,18 @@ scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/oc
 
 scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
+Downloaded again on 25/08/2023 to check any change to the time dimension
+first OK 
+second OK
+third OK
+forth OK
+Check if there is 3d data for both phyc and zooc - yes both variables are available in 3D and vertically integrated
+
 ### *TO CHECK* 
 
 **Check better** file orientation (upside-down?) and check same things as for 01
 
-Strange time dimention now adjusted but this is my interpretation. **Ask Matthias**
+Strange time dimention now adjusted but this is my interpretation. **Ask Matthias** - DONE 
 
 Final values are mean mol m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values, we average instead of sum across months. For NPP and catch we would sum across months to get yearly valuee as these are rates with a time dimension.      
 

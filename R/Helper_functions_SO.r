@@ -414,9 +414,10 @@ extract_antarctica_inputs<-function(netcdf){
     library(lubridate) # https://data.library.virginia.edu/working-with-dates-and-time-in-r-using-the-lubridate-package/
     t<- as.character(seq(ymd("1850-1-1"), ymd("2014-12-31"), by = "month"))
     
-    ## CHECK 
-    # length(t)
-    # length(t_extract_problem)
+    # # CHECK
+    # length(t) #1980
+    # length(t_extract_problem) # 1980
+    # length(t_problem) # 1980
     # t[1]
     # t[length(t)]
     
