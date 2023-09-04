@@ -143,6 +143,7 @@ rm(list=ls())
 load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 # do size classes 2:5 that are in common to all models 
+removeNA = "narmF" # narmT or narmF
 
 mean <-list()
 
@@ -160,8 +161,11 @@ for(i in 2:5){ # note - this becomes 1:5 for WS option (or any other polygon).
     brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[i]], 
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[i]])
  
-  mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = FALSE)
-   
+  if(removeNA == "narmT"){
+    mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = TRUE)
+  }else if (removeNA == "narmF"){
+    mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = FALSE)
+  } 
 }
 
 # do size class 1 where macroecological is available but not boats
@@ -176,7 +180,12 @@ trial_1<-stack(
     brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[1]],
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[1]])
 
-mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = FALSE)
+
+if(removeNA == "narmT"){
+  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = TRUE)
+}else if (removeNA == "narmF"){
+  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = FALSE)
+}
 
 # ### checking means and whether they make sense given single models - phase 1
 # trial_1 # for WS_5_60: 
@@ -195,7 +204,11 @@ trial_6<-stack(
     brick_data_annual_subset_mean_ant$zoomss_gfdl_historical[[6]], 
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[6]])
 
-mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = FALSE)
+if(removeNA == "narmT"){
+  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = TRUE)
+}else if(removeNA == "narmF"){
+  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = FALSE)
+}
 
 # append all data together 
 mean_all<-append(mean, mean_6)
@@ -252,9 +265,11 @@ plot(mean_all[[2]])
 
 ```{r}
 
-# save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
 
-save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+if(removeNA == "narmT"){
+  save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")}else if(removeNA == "narmF"){
+  save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+    }
 
 # 01_extract_modelled_data_SO_WS_5_60.RData = original sent to Philip as first draft # differences using the latitudinal bands approach are explained inside the function and are due to EcoTroph but nothing to consider further. The final data is OK
 

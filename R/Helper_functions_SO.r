@@ -6,8 +6,10 @@
 
 extract_antarctica<-function(netcdf, file = "new"){
   
-  # trial
-  # netcdf = "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"  
+  # # trial
+  # a<-combinations %>% filter(identifier == "apecosm_ipsl_historical")
+  # netcdf = a$netcdf_name
+  # # netcdf = "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"  
   # file = "new"
   
   # # list of files 
@@ -58,7 +60,19 @@ extract_antarctica<-function(netcdf, file = "new"){
   nc_data <- nc_open(file.path(dir, netcdf))
   
   lon <- ncvar_get(nc_data, "lon")
-  lat <- ncvar_get(nc_data, "lat", verbose = F)
+  lat <- ncvar_get(nc_data, "lat", verbose = F) # if verbose =t the process information is printed. def = F
+  
+  
+  # ###### WARNING -
+  # # problem with time vector in inputs - check outputs too 
+  # t_units<-ncatt_get(nc_data, "time", "units")$value
+  # t_problem<-ncvar_get(nc_data, "time")
+  # t_problem[1]
+  # t_extract_problem<-as.character(nc.get.time.series(nc_data))
+  # t_extract_problem[1]
+  # t_extract_problem[length(t_extract_problem)]
+  # # here OK 
+  
   t <- as.character(nc.get.time.series(nc_data))
   
   # this is only to FIX zoom size bins names 
@@ -365,7 +379,7 @@ extract_antarctica<-function(netcdf, file = "new"){
 
 extract_antarctica_inputs<-function(netcdf){
   
-  # # trial
+  # trial
   # netcdf = "gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc"
 
   if(file.exists(file.path(dir, netcdf))){
@@ -402,13 +416,18 @@ extract_antarctica_inputs<-function(netcdf){
     lon <- ncvar_get(nc_data, "lon")
     lat <- ncvar_get(nc_data, "lat", verbose = F)
     
-    ###### WARNING problem with time vector - can this be due to calendar 365_day?? 
-    t_units<-ncatt_get(nc_data, "time", "units")$value
-    
-    t_problem<-ncvar_get(nc_data, "time")
-    t_extract_problem<-as.character(nc.get.time.series(nc_data))
+    # ###### WARNING problem with time vector - can this be due to calendar 365_day?? 
+    # t_units<-ncatt_get(nc_data, "time", "units")$value
+    # t_problem<-ncvar_get(nc_data, "time")
+    # t_problem[1]
+    # length(t_problem)[1]
+    # t_extract_problem<-as.character(nc.get.time.series(nc_data))
     # t_extract_problem[1]
     # t_extract_problem[length(t_extract_problem)]
+    # # same as (but not with MEMs): 
+    # trial<-as.character(nc.get.time.series(nc_data, correct.for.gregorian.julian = TRUE))
+    # trial[1]
+    # trial[length(trial)]
     
     # overwrite t: 
     library(lubridate) # https://data.library.virginia.edu/working-with-dates-and-time-in-r-using-the-lubridate-package/

@@ -51,3 +51,4 @@ rsconnect/
 # Rdata and plots 
 *.RData
 *.jpg
+*.pdf

@@ -11,18 +11,21 @@ plot_SO<-function(wmap_df = antmap_df,
                   max = max,
                   data_type = "modelled", 
                   color_scale = color_scale, 
-                  theme_map = my_theme_map){
+                  theme_map = my_theme_map, 
+                  scale = "raw", 
+                  breaks_vector_n = 10){
   
   # # trial
   # wmap_df = antmap_df
   # data_to_plot = phyt_raster
   # proj = circumpolarCRS
   # legend_name = legend_name
-  # min = phyt_raster@data@min 
+  # min = phyt_raster@data@min
   # max = phyt_raster@data@max
   # data_type = "modelled"
   # color_scale = color_scale
   # theme_map= "my_theme_map"
+  # scale = "log"
 
 
   # convert rasterLayer to sf object and consider circumpolar projections within function
@@ -40,9 +43,12 @@ plot_SO<-function(wmap_df = antmap_df,
   # 6.25-5 = 1.25
   # 8.75-6.25 = 2.5
   
-  # trial<-seq(min, max, length.out = 5)
-  # trial<-trial+1.5
-  
+  if(scale == "log"){
+    data_to_plot$index_1<-log(data_to_plot$index_1)
+    min = log(min) 
+    max = log(max)
+  }  
+    
   if(data_type == "zoo"){
     breaks_vector = c(0,0.5,1,2,3,5,10,25)
     labels_vector = c(0,0.5,1,2,3,5,10,25)
@@ -50,27 +56,24 @@ plot_SO<-function(wmap_df = antmap_df,
     breaks_vector = c(0,0.5,1.2,2.5,3.7,5.0,6.2,8.7)
     labels_vector = c(0,0.5,1.2,2.5,3.7,5.0,6.2,8.7)
   }else{
-    breaks_vector = seq(min, max, length.out = 10)
-    labels_vector = format(round(seq(min, max, length.out = 10), digits = 1), nsmall = 1)
-    # ## trial understand intervals
-    # breaks_vector[2] = breaks_vector[2]-1
-    # breaks_vector[3] = breaks_vector[3]-0.5
-    # breaks_vector[4] = breaks_vector[4]
-    # labels_vector = round(seq(min, max, length.out = 5), digits = 2)
-    # labels_vector[2] = labels_vector[2]-1
-    # labels_vector[3] = labels_vector[3]-0.5
-    # labels_vector[4] = labels_vector[4]
-    # labels_vector = as.character(labels_vector)
-    
-  }
+    breaks_vector = seq(min, max, length.out = breaks_vector_n)
+    labels_vector = format(round(seq(min, max, length.out = breaks_vector_n), digits = 1), nsmall = 1)
+      # ## trial understand intervals
+      # breaks_vector[2] = breaks_vector[2]-1
+      # breaks_vector[3] = breaks_vector[3]-0.5
+      # breaks_vector[4] = breaks_vector[4]
+      # labels_vector = round(seq(min, max, length.out = 5), digits = 2)
+      # labels_vector[2] = labels_vector[2]-1
+      # labels_vector[3] = labels_vector[3]-0.5
+      # labels_vector[4] = labels_vector[4]
+      # labels_vector = as.character(labels_vector)
+    }
   
   if(color_scale == "viridis"){
     
     p1<-ggplot() +
-      # geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey40", color=NA, linewidth = 0.25) +
       geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-      geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
-      
+      geom_polygon(data=wmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
       # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned
       scale_fill_viridis_b(guide = guide_colorbar(
         title = legend_name,
@@ -80,19 +83,16 @@ plot_SO<-function(wmap_df = antmap_df,
         breaks = breaks_vector,
         labels = labels_vector,
         limits=c(min, max),
-        oob = scales::squish,
+        oob = scales::squish
       ) +
-      
       scale_x_continuous(expand=c(0,0))+ # this should get rid of the white space around the map... 
       scale_y_continuous(expand=c(0,0))
   
     }else if(color_scale == "monochromatic"){
       
       p1<-ggplot() +
-        # geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey40", color=NA, linewidth = 0.25) +
         geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-        geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
-    
+        geom_polygon(data=wmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
         # https://colorbrewer2.org/#type=sequential&scheme=Blues&n=3
         scale_fill_gradient(guide = guide_colorbar(
          title = legend_name,
@@ -104,9 +104,28 @@ plot_SO<-function(wmap_df = antmap_df,
           labels = labels_vector,
           limits=c(min, max),
           oob = scales::squish)+
-    
-        scale_x_continuous(expand=c(0,0))+ # this should get rid of the white space around the map... 
+        scale_x_continuous(expand=c(0,0))+ 
         scale_y_continuous(expand=c(0,0))
+      
+    } else if(color_scale == "divergent"){
+      
+      p1<-ggplot() +
+        geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+        geom_polygon(data=wmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
+        scale_fill_continuous_divergingx(palette = 'ArmyRose',
+                                         mid = 1,
+                                         guide = guide_colorbar(
+                                           title = legend_name,
+                                           title.position = "top",
+                                           title.hjust = 0.5),
+                                         breaks = breaks_vector,
+                                         labels = labels_vector,
+                                         limits=c(min, max),
+                                         oob = scales::squish,
+                                         na.value = "black") +
+        scale_x_continuous(expand=c(0,0))+
+        scale_y_continuous(expand=c(0,0))
+      
       
     }
   

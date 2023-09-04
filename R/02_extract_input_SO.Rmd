@@ -47,7 +47,7 @@ Check if there is 3d data for both phyc and zooc - yes both variables are availa
 
 **Check better** file orientation (upside-down?) and check same things as for 01
 
-Strange time dimention now adjusted but this is my interpretation. **Ask Matthias** - DONE 
+Strange time dimention now adjusted but this is my interpretation. Asked Matthias, interpretation is OK - starting value is Jan 1850.  
 
 Final values are mean mol m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values, we average instead of sum across months. For NPP and catch we would sum across months to get yearly valuee as these are rates with a time dimension.      
 
@@ -127,34 +127,46 @@ save(phyto_ant, zoo_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_
 rm(list=ls())
 load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
 
-# combine outputs and average
-file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
-mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = TRUE)
+removeNA = "narmF" # narmT or narmF
 
-plot(mean_phyto) 
+if(removeNA == "narmT"){
 
-file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
-mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = TRUE)
+  # combine outputs and average
+  file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
+  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = TRUE)
 
-# # CHECK 
-# # calculate mean using other approach for size class 2 and compare results to above approach 
-# 
-# trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
-# 
-# trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-# for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
-# 
-# trial3<-do.call(rbind.data.frame, trial2)
-# trial4<-trial3 %>% 
-#   group_by(x,y) %>% 
-#   summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
-#   ungroup
-# 
-# trial_raster<-rasterFromXYZ(trial4)
+  file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
+  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = TRUE)
 
-# # same outputs but trial_raster includes higher lats (empty...)
-# plot(trial_raster)
-plot(mean_zoo)
+  # # CHECK 
+  # # calculate mean using other approach for size class 2 and compare results to above approach 
+  # 
+  # trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
+  # 
+  # trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+  # for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+  # 
+  # trial3<-do.call(rbind.data.frame, trial2)
+  # trial4<-trial3 %>% 
+  #   group_by(x,y) %>% 
+  #   summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
+  #   ungroup
+  # 
+  # trial_raster<-rasterFromXYZ(trial4)
+
+  # # same outputs but trial_raster includes higher lats (empty...)
+  # plot(trial_raster)
+  # plot(mean_zoo)
+}else if (removeNA == "narmF"){
+  
+  # combine outputs and average
+  file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
+  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = FALSE)
+
+  file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
+  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = FALSE)
+
+}
 
 ```
 
@@ -162,8 +174,10 @@ plot(mean_zoo)
 
 ```{r}
 
-save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
-
-# save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+if(removeNA == "narmT"){
+  save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+}else if(removeNA == "narmF"){
+  save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+}
 
 ```
