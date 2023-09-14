@@ -18,10 +18,6 @@ Extract mean values of phytoplankton, and zooplankton the period 1990-1999 acros
 phyc-vint: Integrated Total Phytoplankton Carbon Concentration 
 zooc-vint: Integrated Total Zooplankton Carbon Concentration 
 
-**Alternative option** for better comparison: 
-
-zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration 
-
 ### Data source 
 
 Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocl: phyc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
@@ -37,25 +33,19 @@ scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/oc
 scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
 Downloaded again on 25/08/2023 to check any change to the time dimension
-first OK 
-second OK
-third OK
-forth OK
 Check if there is 3d data for both phyc and zooc - yes both variables are available in 3D and vertically integrated
 
 ### *TO CHECK* 
 
-**Check better** file orientation (upside-down?) and check same things as for 01
+File orientation (upside-down?) and check same things as for 01 - OK
 
-Strange time dimention now adjusted but this is my interpretation. Asked Matthias, interpretation is OK - starting value is Jan 1850.  
+Strange time dimension now adjusted but this is my interpretation. Asked Matthias, interpretation is OK - starting value is Jan 1850.  
 
 Final values are mean mol m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values, we average instead of sum across months. For NPP and catch we would sum across months to get yearly valuee as these are rates with a time dimension.      
 
-To transform from mol m-2 to g C m-2 I did X12.01
+To transform from mol m-2 to g C m-2 I did X12
 
-For better comparison use **zmeso-vint**? I don't totally understand this output -e.g. which size included and how this has been created - and I would use total zooplankton instead.  
-
-Values not decreasing from phyto-zoo-tcb? Should we do **ESMs+MEMs driven by phyto/zoo only and separately**? 
+For better comparison use **zmeso-vint**? zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration. Discussed with Ryan too - not fully understanding this output -e.g. which size included and how this has been created - would use total zooplankton instead and specify in figs.  
 
 ### Set environment 
 
@@ -95,19 +85,25 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
 dir<-"/rd/gem/private/users/camillan/Extract_SouthernOcean_Data" 
 
 # define them manually as they are only 4
-netcdf_phyto= list("gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc",
-                   "ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc")
+netcdf_phyto= c("gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc",
+                "ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc")
 
-netcdf_zoo= list("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
-                 "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
+netcdf_zoo= c("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
+              "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
 
 # apply function in // ----
 
-phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
-# are names OK?? TO CHECK 
+history_year1 = 1990
+history_year2 = 1999
+future_year1 = NA
+future_year2 = NA
+
+phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2), mc.cores = detectCores()-2)
+
 names(phyto_ant) <- netcdf_phyto
 
-zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x), mc.cores = detectCores()-2)
+zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2), mc.cores = detectCores()-2)
+
 names(zoo_ant) <- netcdf_zoo
 
 ```
@@ -129,42 +125,38 @@ load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
 
 removeNA = "narmF" # narmT or narmF
 
+file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
+file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
+
 if(removeNA == "narmT"){
 
   # combine outputs and average
-  file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
-  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = TRUE)
+  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = mean, na.rm = TRUE)
+  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = mean, na.rm = TRUE)
 
-  file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
-  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = TRUE)
+  # CHECK
+  # calculate mean using other approach for size class 2 and compare results to above approach
 
-  # # CHECK 
-  # # calculate mean using other approach for size class 2 and compare results to above approach 
-  # 
-  # trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
-  # 
-  # trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-  # for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
-  # 
-  # trial3<-do.call(rbind.data.frame, trial2)
-  # trial4<-trial3 %>% 
-  #   group_by(x,y) %>% 
-  #   summarise(mean = mean(index_1, na.rm=TRUE)) %>% 
-  #   ungroup
-  # 
-  # trial_raster<-rasterFromXYZ(trial4)
+  trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
 
-  # # same outputs but trial_raster includes higher lats (empty...)
-  # plot(trial_raster)
-  # plot(mean_zoo)
+  trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+  for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+
+  trial3<-do.call(rbind.data.frame, trial2) %>%
+    group_by(x,y) %>%
+    summarise(mean = mean(index_1, na.rm=TRUE)) %>%
+    ungroup
+
+  trial_raster<-rasterFromXYZ(trial3)
+
+  # same outputs 
+  plot(trial_raster)
+  plot(mean_zoo)
+
 }else if (removeNA == "narmF"){
   
-  # combine outputs and average
-  file_phyto<-stack(phyto_ant[[1]], phyto_ant[[2]])
-  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = "mean", na.rm = FALSE)
-
-  file_zoo<-stack(zoo_ant[[1]], zoo_ant[[2]])
-  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = "mean", na.rm = FALSE)
+  mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = mean, na.rm = FALSE)
+  mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = mean, na.rm = FALSE)
 
 }
 

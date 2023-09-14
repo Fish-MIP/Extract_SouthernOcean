@@ -27,10 +27,9 @@ scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/OutputData/marine-fi
 
 ### SO boundaries 
 
-From Paul Spence: 
-/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc" OR new regridded version but need to ask Paul again. 
+From Paul Spence:/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc" 
 
-LME from - not much data included - from Julia's dropbox folder FishMIP Repos/LME66/
+LME - not much data included - from Julia's dropbox folder FishMIP Repos/LME66/
 
 World_Seas_IHO_v3 from https://www.marineregions.org/downloads.php
 
@@ -38,17 +37,18 @@ Or just latitudinal limits to mimic Yang et al. 2022 **used this**
 
 ### *TO CHECK* 
 
-Extent is different for dbpm and zoom IPSL - now dealt with it but **needs more checking**. Also need to adjust the emergent constraint code accordingly (e.g. inside plot_gridded_slope_mpas() in plotting_functions_EC you are using setExtent too). 
+Extent is different for dbpm and zoom IPSL - checked, OK 
 
-**Check better** extent, crs, crop and mask inside function and in general 
-
-**Check better** file orientation (upside-down?) - checked and plots are OK when using raster. nmihgt also be good to check if it is still all OK when cutting SO lat (but it should).  
+File orientation (upside-down?) - checked, OK when using raster
 
 Final values are mean g m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values we average instead of sum across months. For NPP and catch we would sum across months to get yearly value as these are rates with a time dimension.      
 
-To transform from g m-2 to g C m-2 for better comparison with inputs I did /10   
+To transform from g m-2 to g C m-2 for better comparison with inputs I did /10 as suggested by Ryan, common assumption. 
+REFs: **still need to check better?**
+https://aslopubs.onlinelibrary.wiley.com/doi/full/10.1002/lno.11709 https://link.springer.com/article/10.1007/s00227-011-1783-7
+how much of the fish body is carbon? 10-15%
 
-MACROECOLOGICAL: 5 bins, data is extracted but not sure whether I should include it in the multi-model mean as I don't know which classes these are (likely 1 to 5 though as specified in bins names). Yes - Ryan checked. 
+MACROECOLOGICAL: 5 bins, size classes 1 to 5 - checked with Ryan. 
 
 ### Set environment 
 
@@ -111,11 +111,20 @@ combinations<-expand.grid(mem = mem, esm = esm, scenario = scenario) %>%
 
 netcdf = combinations$netcdf_name
 
-brick_data_annual_subset_mean_ant<-mclapply(netcdf, function(x) extract_antarctica(x, file = "new"), mc.cores = detectCores()-2)
+history_year1 = 1990
+history_year2 = 1999
+future_year1 = NA
+future_year2 = NA
+
+brick_data_annual_subset_mean_ant<-mclapply(netcdf, function(x) extract_antarctica(x, file = "new", history_year1=history_year1, history_year2=history_year2, future_year1=future_year1, future_year2=future_year2), mc.cores = detectCores()-2)
+
+# mclapply returns results in the correct order: https://stackoverflow.com/questions/14697901/is-mclapply-guaranteed-to-return-its-results-in-order#:~:text=Short%20answer%3A%20it%20does%20return,an%20R%20function...)
 names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 
-### WARNINGs
-# land between GFDL and IPSL is different so coastal values might be "biased" e.g. mean with na.rm=TRUE will consider only GFDL values for the very coastal gridcell (and only a set of models).
+## check that the order in which mcapply prints outputs is the same as the order in which inputs are given e.g. 1st output is actually apecosm gfdl etc. 
+
+# NOTE
+# land-sea mask between GFDL and IPSL is different so coastal values might be "biased" e.g. mean with na.rm=TRUE will consider only GFDL values for the very coastal gridcell (and only a set of models). use na.tm=FALSE so that these cells are NAs
 # ZOOM bins fixed but need to contact Jase and Matthias 
 
 ```
@@ -123,13 +132,6 @@ names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 ### save data
 
 ```{r}
-
-# codes to explore some differences between appraoches (all sorted): 
-# month = annual /12 
-# WS = World_Seas_IHO_v3
-# 5 = including macroecological 
-# 60 = -60 lat
-# checks done with g m-2 values. 
 
 save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
@@ -145,9 +147,9 @@ load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RD
 # do size classes 2:5 that are in common to all models 
 removeNA = "narmF" # narmT or narmF
 
-mean <-list()
+mean_2_5 <-list()
 
-for(i in 2:5){ # note - this becomes 1:5 for WS option (or any other polygon). 
+for(i in 2:5){ 
 
   trial<-stack(
     brick_data_annual_subset_mean_ant$apecosm_ipsl_historical[[i]],
@@ -162,11 +164,13 @@ for(i in 2:5){ # note - this becomes 1:5 for WS option (or any other polygon).
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[i]])
  
   if(removeNA == "narmT"){
-    mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = TRUE)
+    mean_2_5[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = mean, na.rm = TRUE)
   }else if (removeNA == "narmF"){
-    mean[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = "mean", na.rm = FALSE)
+    mean_2_5[[i]] <- stackApply(trial, indices =  rep(1,nlayers(trial)), fun = mean, na.rm = FALSE)
   } 
 }
+
+mean_2_5[sapply(mean_2_5, is.null)] <- NULL
 
 # do size class 1 where macroecological is available but not boats
 
@@ -182,17 +186,10 @@ trial_1<-stack(
 
 
 if(removeNA == "narmT"){
-  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = TRUE)
+  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = mean, na.rm = TRUE)
 }else if (removeNA == "narmF"){
-  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = "mean", na.rm = FALSE)
+  mean_1<-stackApply(trial_1, indices =  rep(1,nlayers(trial_1)), fun = mean, na.rm = FALSE)
 }
-
-# ### checking means and whether they make sense given single models - phase 1
-# trial_1 # for WS_5_60: 
-# (7.246053+53.081787+70.417564+39.263441+306.929849+112.348098+61.729895+53.103343)/8 # 88 does not seem to make sense given max value in map is ~120. But this is becasue for some grid cell only a subset of models is available (hence e.g. (70+330+112)/3 = 123). these are mostly GFDL models. This means that na.rm=F would remove these grid cells. in terms of patterns that does not make much difference but in terms of max values it does and a this is due to a few coastal cells. See Phase 2 below.     
-#
-# trial_1 ## for 5_60 (or vice versa) 
-# (7+50+300+35+250+100+60+50)/8 # model n.3 is the only different one. 
 
 # do size class 6 where boats and macroecological are not available
 
@@ -205,59 +202,36 @@ trial_6<-stack(
     brick_data_annual_subset_mean_ant$zoomss_ipsl_historical[[6]])
 
 if(removeNA == "narmT"){
-  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = TRUE)
+  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = mean, na.rm = TRUE)
 }else if(removeNA == "narmF"){
-  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = "mean", na.rm = FALSE)
+  mean_6<-stackApply(trial_6, indices =  rep(1,nlayers(trial_6)), fun = mean, na.rm = FALSE)
 }
 
 # append all data together 
-mean_all<-append(mean, mean_6)
-mean_all<-append(mean_1, mean_all)
-mean_all[sapply(mean_all, is.null)] <- NULL
+# append(myList, item, after = index)
+mean_all<-append(mean_2_5, mean_1, after = 0)
+mean_all<-append(mean_all, mean_6, after = 5)
 
-# # CHECK - OK
-# # calculate mean using other approach for size class 2 and compare results to above approach
-# 
-# trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 2)
-# trial[sapply(trial, is.null)] <- NULL
-# 
-# trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x))) 
-# trial2$model = gsub("[^a-zA-Z]", "", rownames(trial2))
-# 
-# trial3<-do.call(rbind.data.frame, trial2)
-# trial4<-trial3 %>%
-#   group_by(x,y) %>%
-#   summarise(mean = mean(index_1, na.rm=FALSE)) %>% # WARNING NA are removed by def when doing rasterToPoints() .... 
-#   ungroup()
-# 
-# trial_raster<-rasterFromXYZ(trial4)
-# 
-# # same outputs but trial_raster includes higher lats (empty...)
-# plot(trial_raster)
+# CHECK - OK
+# calculate mean using other approach for size class 2 and compare results to above approach
+# NAs are removed by def when doing rasterToPoints() so this comparison works only when removeNA == "narmT"
+
+trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 2)
+trial[sapply(trial, is.null)] <- NULL
+
+trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+trial2$model = gsub("[^a-zA-Z]", "", rownames(trial2))
+
+trial3<-do.call(rbind.data.frame, trial2) %>%
+  group_by(x,y) %>%
+  summarise(mean = mean(index_1, na.rm=removeNA)) %>% 
+  ungroup()
+
+trial_raster<-rasterFromXYZ(trial3)
+
+# same outputs
+plot(trial_raster)
 plot(mean_all[[2]])
-
-# ### checking means and whether they make sense given single models - phase 2
-# filter(trial4, trial4$mean == max(trial4$mean))
-# #      x     y  mean
-# #   <dbl> <dbl> <dbl>
-# # 1  172. -77.5  134.
-# 
-# filter(trial3, x == 172.5, y == -77.5)
-# #                                          x     y   index_1
-# # ecotroph_gfdl_historical.4208        172.5 -77.5  51.87132
-# # macroecological_gfdl_historical.4211 172.5 -77.5 304.14745
-# # zoomss_gfdl_historical.4211          172.5 -77.5  45.57561
-# 
-# # However, here na.rm=TRUE is == to na.rm=FALSE because, by default, rasterToPoints() omits the NA values. options to change this but not straightforward...  
-
-# ##### check outputs and reason in comparison with size-spectrum paper 
-# # cannot compare to these ones as they are up to -40 lat
-# plot(mean_all[[1]])    
-# plot(mean_all[[2]])   
-# plot(mean_all[[3]])   
-# plot(mean_all[[4]])    
-# plot(mean_all[[5]])    
-# plot(mean_all[[6]])  
 
 ```
 
@@ -265,12 +239,9 @@ plot(mean_all[[2]])
 
 ```{r}
 
-
 if(removeNA == "narmT"){
   save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")}else if(removeNA == "narmF"){
   save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
     }
-
-# 01_extract_modelled_data_SO_WS_5_60.RData = original sent to Philip as first draft # differences using the latitudinal bands approach are explained inside the function and are due to EcoTroph but nothing to consider further. The final data is OK
 
 ```

@@ -4,32 +4,25 @@
 
 # Extract data from tcblog10 netCDF ----
 
-extract_antarctica<-function(netcdf, file = "new"){
+extract_antarctica<-function(netcdf, 
+                             file = "new",
+                             history_year1,
+                             history_year2,
+                             future_year1,
+                             future_year2){
   
   # # trial
-  # a<-combinations %>% filter(identifier == "apecosm_ipsl_historical")
+  # a<-combinations %>% filter(identifier == "boats_ipsl_historical")
   # netcdf = a$netcdf_name
-  # # netcdf = "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"  
   # file = "new"
+  # history_year1=1990
+  # history_year2=1999
+  # future_year1=2090
+  # future_year2= 2099
   
-  # # list of files 
-  # [1] "apecosm_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"          
-  # [2] "apecosm_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"       
-  # [3] "boats_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1950_2014.nc"            
-  # [4] "boats_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1950_2014.nc"         
-  # [5] "dbpm_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"             
-  # [6] "dbpm_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1850_2014.nc"          
-  # [7] "ecotroph_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"          
-  # [8] "ecotroph_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"       
-  # [9] "macroecological_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"   
-  # [10] "macroecological_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"
-  # [11] "zoomss_gfdl-esm4_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc"            
-  # [12] "zoomss_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_annual_1950_2014.nc" 
-  
-
   if(file.exists(file.path(dir, netcdf))){
   
-  ########## extract info from netcdf name
+  ########## extract info from netcdf name ----
   model = sub("\\_.*", "", netcdf)
   
   if(str_detect(netcdf, "gfdl", negate = FALSE)){
@@ -38,7 +31,6 @@ extract_antarctica<-function(netcdf, file = "new"){
     esm = "ipsl-cm6a-lr"
   }
   
-  # WARNING - add in EC? 
   if(str_detect(netcdf, "monthly", negate = FALSE)){
     time_step = "monthly"
   }else if (str_detect(netcdf, "annual", negate = FALSE)){
@@ -58,22 +50,47 @@ extract_antarctica<-function(netcdf, file = "new"){
   
   # extract info from netcdf description: 
   nc_data <- nc_open(file.path(dir, netcdf))
+  print(nc_data)
   
   lon <- ncvar_get(nc_data, "lon")
   lat <- ncvar_get(nc_data, "lat", verbose = F) # if verbose =t the process information is printed. def = F
   
+  # check function below re time vector
+  t_units<-ncatt_get(nc_data, "time", "units")$value
+
+  # get time vector based on file name
+  if(str_detect(netcdf, "1850", negate = FALSE)){
+    stTime = "1850-1-1"
+    enTime = "2014-12-31"
+  }else if (str_detect(netcdf, "1950", negate = FALSE)){
+    stTime = "1950-1-1"
+    enTime = "2014-12-31"
+  }else if (str_detect(netcdf, "2015", negate = FALSE)){
+    stTime = "2015-1-1"
+    enTime = "2100-12-31"
+  }
   
-  # ###### WARNING -
-  # # problem with time vector in inputs - check outputs too 
-  # t_units<-ncatt_get(nc_data, "time", "units")$value
-  # t_problem<-ncvar_get(nc_data, "time")
-  # t_problem[1]
-  # t_extract_problem<-as.character(nc.get.time.series(nc_data))
-  # t_extract_problem[1]
-  # t_extract_problem[length(t_extract_problem)]
-  # # here OK 
+  if(time_step == "monthly"){
+    time_step_vector = "month"
+  }else if(time_step == "annual"){
+    time_step_vector = "year"
+  }
   
+  library(lubridate) # https://data.library.virginia.edu/working-with-dates-and-time-in-r-using-the-lubridate-package/
+  t1<- as.character(seq(ymd(stTime), ymd(enTime), by = time_step_vector))
+  print(paste("Start time from file name ",t1[1], sep = ""))
+  print(paste("End time from file name ",t1[length(t1)], sep = ""))
+  
+  # get time vector based on built in function 
   t <- as.character(nc.get.time.series(nc_data))
+  print(paste("Start time with built in function ",t[1], sep = ""))
+  print(paste("End time with built in function ",t[length(t)], sep = ""))
+  
+  if((t1[1] != t[1]) | (t1[length(t1)] != t[length(t)])){
+    warning(paste(model, esm, scenario, "incorrect time vector", sep = " "), immediate. = TRUE)
+    ## trust the vector from file name (this function does not work with inputs)
+    t<-t1
+  }
   
   # this is only to FIX zoom size bins names 
   if(model != "zoomss" & file == "new"){
@@ -86,6 +103,10 @@ extract_antarctica<-function(netcdf, file = "new"){
   t_units<-ncatt_get(nc_data, "time", "units")$value
   b_units<-ncatt_get(nc_data, "tcblog10", "units")$value
   
+  
+  ### TO ADD - missing values 
+  missingValues<-ncatt_get(nc_data, "tcblog10", "missing_value")$value
+  
   nc_close(nc_data)
   
   # print warnings 
@@ -94,7 +115,7 @@ extract_antarctica<-function(netcdf, file = "new"){
   enLon<-lon[length(lon)]
   stLat<-lat[1]
   enLat<-lat[length(lat)]
-  stTime<-t[1]
+  stTime<-t[1] # leave this as a double check on the time vector
   enTime<-t[length(t)]
   
   if(stLon != -179.5){
@@ -103,6 +124,8 @@ extract_antarctica<-function(netcdf, file = "new"){
   if(enLon != 179.5){
     warning(paste(model, esm, scenario, "incorrect ending Lon", sep = " "), immediate. = TRUE)
   }
+  ## dbpm and zoom IPSL incorrect ln fixed below 
+  
   if(stLat != 89.5){
     warning(paste(model, esm, scenario, "incorrect starting Lat", sep = " "), immediate. = TRUE)
   }
@@ -130,6 +153,8 @@ extract_antarctica<-function(netcdf, file = "new"){
   if(bins[length(bins)] != 6){
     warning(paste(model, esm, scenario, "incorrect bins dimension", sep = " "), immediate. = TRUE)
   }
+  ## macroecological 5 bins and boats 2-4 bins fixed below 
+  
   if(b_units != "g m-2"){
     warning(paste(model, esm, scenario, "incorrect biomass units", sep = " "), immediate. = TRUE)
   }
@@ -138,7 +163,7 @@ extract_antarctica<-function(netcdf, file = "new"){
   brick_data<-list()
  
   for (i in 1:length(bins)){
-    brick_data[[i]]<-brick(file.path(dir, netcdf), level = i)
+    brick_data[[i]]<-brick(file.path(dir, netcdf), level = i) # level: integer > 0 (default=1). To select the 'level' (4th dimension variable) to use, if the file has 4 dimensions, e.g. to create a RasterBrick of weather over time at a certain height.
     print(dim(brick_data[[i]]))
   }
   
@@ -147,11 +172,62 @@ extract_antarctica<-function(netcdf, file = "new"){
   # plot(brick_data[[1]][[1004]])
   # plot(brick_data[[4]][[dim(brick_data[[2]])[3]]])
   
-  ##### WARNING - extent problem for dbpm and zoom ipsl: different than for other models 
-  # in general, extent is different (shifted by 0.5 deg) from what is specified in lat and lon
-  # extent(brick_data[[1]])
+  ### Data is specified in file names amready... but not for the inputs.
+  # BOATS example
+  # class      : RasterBrick 
+  # dimensions : 180, 360, 64800, 780  (nrow, ncol, ncell, nlayers)
+  # resolution : 1, 1  (x, y)
+  # extent     : -180, 180, -90, 90  (xmin, xmax, ymin, ymax)
+  # crs        : +proj=longlat +datum=WGS84 +no_defs 
+  # source     : boats_ipsl-cm6a-lr_nobasd_historical_nat_default_tcblog10_global_monthly_1950_2014.nc 
+  # names      : X1950.01.01, X1950.02.01, X1950.03.01, X1950.04.01, X1950.05.01, X1950.06.01, X1950.07.01, X1950.08.01, X1950.09.01, X1950.10.01, X1950.11.01, X1950.12.01, X1951.01.01, X1951.02.01, X1951.03.01, ... 
+  # Date       : 1950-01-01, 2014-12-01 (min, max)
+  # varname    : tcblog10 
+  # level      : 1 
+  
+  ## TO ADD 
+  # check if land is specified as missingValues or as NA
+  # options(scipen=999)
+  trial<-brick_data[[1]][[1]] # take first layer and first year
+  if(is.null(trial[trial == missingValues]) == FALSE){ # if there are missingValues cells 
+    warning(paste(model, esm, scenario, "missing values not as NAs", sep = " "), immediate. = TRUE)
+    for (i in 1:length(brick_data)){
+      brick_data[[i]][brick_data[[i]] == missingValues]<-NA
+    }
+  }
+  # # back check 
+  # plot(trial)
+  # trial[is.na(trial)] <- missingValues
+  # plot(trial)
+  
+  ### TO FINISH... 
+  # # check for negative values in random layer/years
+  # trial[trial < 0]
+  # 
+  # lengthLoop<-dim(brick_data[[1]])[3]
+  # 
+  # vals_summary<-vector()
+  # 
+  # for(i in 1:length(bins)){
+  #   # i = 1
+  #   data<-brick_data[[i]]
+  #   for(j in 1:lengthLoop){
+  #     # j = 1
+  #     vals<-getValues(data[[j]])
+  #     vals_summary[[j]]<-sum(!is.na(vals[vals<0]))
+  #   }
+  # }
+  # 
+  # # lapply refers to layers - i.e. bins 
+  # # stackApply referst to 
+  # trial<-lapply(brick_data, FUN = function(x) stackApply(x, indices=t, fun=sum(!is.na(x[x<0]))))
+  # trial<-lapply(brick_data, FUN = function(x) stackApply(x, indices=t, fun=sum))
+  # 
+  # trial<-brick_data[[1]]
+  # trial<-stackApply(trial, indices=t, fun=sum)
+  ### end to add 
 
-  ########## 1 - calculate maps of annual means 
+  ########## calculate maps of annual means ----
   
   # remove 1850-1950 as not all models have them
   indices<-t
@@ -159,7 +235,13 @@ extract_antarctica<-function(netcdf, file = "new"){
   if(scenario %in% c("historical","picontrol_hist")){
     indices_subset<-indices[indices>="1950-01-01"]
     indices_position<-match(indices_subset,indices)
+    # check
+    # indices[indices_position[1]]  
     brick_data_subset<-lapply(brick_data, FUN = function(x) raster::subset(x, indices_position))
+    # check 
+    # dim(brick_data[[1]])[3]-dim(brick_data_subset[[1]])[3] # 100 0r 1200 (100*12)
+    # names(brick_data_subset[[1]])[1] # 1950
+    # names(brick_data_subset[[1]])[length(names(brick_data_subset[[1]]))] # 2014
   }else if (scenario %in% c("ssp1","ssp5","picontrol_fut")){
     brick_data_subset<-brick_data
     } else if(scenario == "picontrol_whole"){
@@ -170,12 +252,7 @@ extract_antarctica<-function(netcdf, file = "new"){
   }
   
   # calculate annual means
-  # WARNING - try median instead 
-  
-  
-  
   # https://gis.stackexchange.com/questions/257090/calculating-and-displaying-mean-annual-precipitation-from-cru-data
-  # create vector to serve as index
   
   if(scenario %in% c("historical","picontrol_hist", "picontrol_whole")){ 
     indices2<-as.Date(indices_subset)
@@ -186,49 +263,46 @@ extract_antarctica<-function(netcdf, file = "new"){
   indices2<-as.numeric(indices2)
   tic()
   brick_data_annual<-lapply(brick_data_subset, FUN = function(x) stackApply(x, indices=indices2, fun=mean))
-  toc() # 4.4. min historical 
-  
-  # rm(mean) # when error 
+  toc() # 4.4. min historical monthly, 12 sec annual
   
   # # CHECK 
   # dim(brick_data_annual[[1]])
   # plot(brick_data_annual[[1]][[15]])
+  # dim(brick_data_subset[[1]])[3]/12 # 65 for e.g. DBPM which is == dim(brick_data_annual[[1]])[3]
+  # names(brick_data_annual[[1]])[1] # 1950, 1951 etc... 
+  # names(brick_data_annual[[1]])[length(names(brick_data_annual[[1]]))] # 2014
   
-  # THis is only for DBPM checking - extract the future part of picontrol 
+  # This is only for DBPM checking - extract the future part of picontrol 
   if(scenario == "picontrol_whole"){scenario = "picontrol_fut"}
 
-  ########## 2 - calculate mean tcb over period and save for maps
+  ########## calculate mean over period and save for maps ----
   
   # subset - choose a period for maps
   if(scenario %in% c("historical","picontrol_hist")){
     indices_subset3<-unique(indices2)
-    indices_subset3<-indices_subset3[indices_subset3>=1990 & indices_subset3<=1999] # Time period asked by Philip Boyd
+    indices_subset3<-indices_subset3[indices_subset3>=history_year1 & indices_subset3<=history_year2] 
   }else if(scenario %in% c("ssp1", "ssp5", "picontrol_fut")){
     indices_subset3<-unique(indices2)
-    indices_subset3<-indices_subset3[indices_subset3>2090 & indices_subset3<=2099] # Future not considered here 
+    indices_subset3<-indices_subset3[indices_subset3>=future_year1 & indices_subset3<=future_year2] # TO ADD CHANGES in >=
   }
   
-  indices_position3<-match(indices_subset3,unique(indices2))
+  indices_position3<-match(indices_subset3,unique(indices2)) # unique(indices2) = new time dimension after annual mean
   brick_data_annual_subset<-lapply(brick_data_annual, FUN = function(x) raster::subset(x, indices_position3))
+  
   # # CHECK
   # dim(brick_data_annual_subset[[1]])
-  # extent(brick_data_annual_subset[[1]])
   # plot(brick_data_annual_subset[[5]][[10]])
-  
-  # mean
-  # WARNING - try median instead 
-  
-  
   
   indices4<-rep(1, length(indices_subset3))
   brick_data_annual_subset_mean<-lapply(brick_data_annual_subset, FUN = function(x) stackApply(x, indices=indices4, fun=mean))
+  
   # # CHECK 
   # dim(brick_data_annual_subset_mean[[1]])
   # plot(brick_data_annual_subset_mean[[6]])
   
-  ###### Just trial to understand stackapply 
+  # # CHECK - understand stackapply 
   # dim(brick_data_annual_subset[[1]]) # this is a list of raster stack - so you apply to each list (size) a mean function across layers (years)
-  # # so this below does not make sense....
+  # # so this below does not make sense as you need to go through the list first ...
   # brick_data_annual_subset_mean<-stackApply(brick_data_annual_subset, FUN = function(x) mean(x, indices=indices4))
   
   # CHECK if all bins are full
@@ -241,25 +315,48 @@ extract_antarctica<-function(netcdf, file = "new"){
   }
   
   # defining layers according to bins (boats has 6 layers with 2 being empty)
+  # macroecological has 5 layers 
   if (model == "macroecological"){
     layers<-c(1:5)
   }else{
     layers<-c(1:6)
   }
   
-  # WARNING - dealing with different extent for Zoom and DBPM IPSL before extracting data  
+  ########## fix extent and select SO ----
+  # for Zoom and DBPM IPSL before extracting data and averaging them   
+  
   if(stLon != -179.5){
     
     # ## CHECK 
     # brick_data_annual_subset_mean
     # plot(brick_data_annual_subset_mean[[1]])
+    # extent(brick_data_annual_subset_mean[[1]])
+    
+    ## DBPM & ZoomSS
+    # # dim of extracted variables from the netcdf
+    # lat # 89.5, -89.5
+    # length(lat) # 180
+    # lon # -180, 179 
+    # length(lon) # 360 # this includes 0 while lat does not because it goes by 0.5 deg. 
+    # # dim of raster (added 0.5 deg)
+    # brick_data_annual_subset_mean[[1]]
+    # # -90, 90 # to be 180 this then should not include 0 but jump from 1 to -1?
+    # # -180.5, 179.5
+    # # how are the equator and Greenw. considered?
+    # trial0<-as.data.frame(rasterToPoints(brick_data_annual_subset_mean[[1]]))
+    # unique(trial0$x)# from -180 to 179 with 0
+    # unique(trial0$y)# from 89.5 to -78.5 without 0 (Antarctica land removed)
     
     # New extent 
     bb <- extent(-180, 180, -90, 90) 
-    # trial<-setExtent(brick_data_annual_subset_mean[[1]], bb, keepres=FALSE) 
-    # WARNING keepres=FALSE changes the resolution (but not in Zoom??), the alternative = TRUE changes 
-    # the number of columns 
-    # OK for now but needs more checking  
+    # trial<-setExtent(brick_data_annual_subset_mean[[1]], bb, keepres=TRUE)  
+    # plot(trial)
+    # trial2<-setExtent(brick_data_annual_subset_mean[[1]], bb, keepres=FALSE) 
+    # plot(trial2)
+    # keepers: logical. If TRUE, the resolution of the cells will stay the same after adjusting the bounding box (by adjusting the number of rows and columns). 
+    # If FALSE, the number of rows and columns will stay the same, and the resolution will be adjusted.
+    # snap: logical. If TRUE, the extent is adjusted so that the cells of the input and output RasterLayer are aligned
+    # for DBPM and ZoomSS, no difference between approaches
     
     for(i in 1:6){
       brick_data_annual_subset_mean[[i]]<-setExtent(brick_data_annual_subset_mean[[i]], bb, keepres=FALSE) 
@@ -268,21 +365,37 @@ extract_antarctica<-function(netcdf, file = "new"){
     # ## CHECK 
     # brick_data_annual_subset_mean
     # plot(brick_data_annual_subset_mean[[1]])
+    
+    # # how are the equator and Greenw. considered?
+    # # DBPM and zoomSS:
+    # trial3<-as.data.frame(rasterToPoints(brick_data_annual_subset_mean[[1]]))
+    # unique(trial3$x)# from -179.5 to 179.5 without 0
+    # unique(trial3$y)# from 89.5 to -78.5 withot 0 (Antarctica land removed)
+    # trial4<-filter(trial3, x %in% c(0.5))
+    # length(unique(trial4$y)) # Greenw. includes values, some missing lon/lat due to land
+    # trial4<-filter(trial3, x %in% c(-0.5))
+    # unique(trial4$y) # Greenw. includes values, some missing lon/lat due to land
+    # trial4<-filter(trial3, y %in% c(0.5))
+    # unique(trial4$x) # the equator includes values, some missing lon/lat due to land
+    # trial4<-filter(trial3, y %in% c(-0.5))
+    # length(unique(trial4$x)) # the equator includes values
+  
   }
   
   # SELECT SO polygon:  
   
   # # # USING LME 
   # # library(sf)
-  # # shape<-st_read("/home/ubuntu/extract_SouthernOcean/Input/LME66/LMEs66.shp")
-  # # ant<-shape[47,] # WARNING - shouldn't SO be 61? 
+  # # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/LME66/LMEs66.shp")
+  # # ant<-shape[47,] # SO should be LME61! 
   # 
   # # USING World_Seas_IHO_v3
   # library(sf)
   # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/World_Seas_IHO_v3/World_Seas_IHO_v3.shp")
   # ant<-shape[63,] # Southern Ocean
   # 
-  # # loop through sizes (could use stackapply)
+  # # loop through sizes (could use lapply)
+  # https://gis.stackexchange.com/questions/385850/mask-and-crop-a-raster-to-multiple-polygons-in-r
   # brick_data_annual_subset_mean_ant<-list()
   # 
   # for(i in layers){
@@ -291,14 +404,18 @@ extract_antarctica<-function(netcdf, file = "new"){
   # 
   #   # i = 2
   #   trial<-brick_data_annual_subset_mean[[i]]
-  # 
+  #
+  # # CRS: same projections 
   #   crs(trial) <- crs(shape)
+  # # crop(): subset to the common polygon extent (a bounding box)   
   #   temp<-crop(trial, extent(ant))
-  #   trial2<-mask(temp, ant) # NOTE - for EcoTroph, 
-  #   # here you remove some coastal outliers that are not inside the ant poligon.
-  #   # because you do not remove these values with the option below based on lat band
-  #   # the 2 plots from the 2 appraoch look very different but they are not, 
-  #   # once removed these outliers using the appraoch below, the plots are the same 
+  # # mask(): Create a new Raster* object that has the same values as x, except for the cells that are NA (or other maskvalue) in a 'mask'
+  #   trial2<-mask(temp, ant) 
+  # # NOTE - for EcoTroph, 
+  # # here you remove some coastal outliers that are not inside the SO poligon.
+  # # because you do not remove these values with the option below based on lat band
+  # # the 2 plots from the 2 approaches look different but they are not, 
+  # # once removed these outliers using the approach below, the plots are the same 
   # 
   #   brick_data_annual_subset_mean_ant[[i]]<-trial2
   #   
@@ -308,62 +425,43 @@ extract_antarctica<-function(netcdf, file = "new"){
   # # plot(brick_data_annual_subset_mean_ant[[2]])
   # # extent(brick_data_annual_subset_mean_ant[[2]])
   
-  #### OR cut values of lat < e.g.-40 for comparison with Yang et al. 2022
+  # OR cut values of lat < e.g.-40 for comparison with Yang et al. 2022
 
-  brick_data_annual_subset_mean_ant<-list()
+  # step1<-lapply(brick_data_annual_subset_mean, function(x) as.data.frame(rasterToPoints(x)))
+  # step2<-lapply(step1, function(x) filter(x, y <= -40, y >= -78))
+  # 
+  # # transform back in raster
+  # brick_data_annual_subset_mean_ant<-lapply(step2[sapply(step2, function(x) dim(x)[1]) > 0], function(x) rasterFromXYZ(x, crs = crs(brick_data_annual_subset_mean[[1]])))
+  # 
+  # # add back dimension 1 and 6 in boats 
+  # # otherwise you need to change the averaging code 02
+  # if(model == "boats"){
+  #   brick_data_annual_subset_mean_ant<-append(brick_data_annual_subset_mean_ant, 
+  #                                             brick_data_annual_subset_mean[[1]],
+  #                                             after = 0)
+  #   brick_data_annual_subset_mean_ant<-append(brick_data_annual_subset_mean_ant, 
+  #                                             brick_data_annual_subset_mean[[6]],
+  #                                             after = 5)
+  # }
+  # 
+  # 
 
-  # this version of the code does not work with BOATS size classes 1 and 6 (empty)
-  # so need to define a different layer for BOATS
-
-  if (model == "boats"){
-    layers<-c(2:5)
-  }else{
-    layers<-layers
-  }
-
-  for(i in layers){
-
-    # i = 2
-      trial<-brick_data_annual_subset_mean[[i]] # here is already 
-      trial<-as.data.frame(rasterToPoints(trial))
-
-      #### WARNING
-      # the below results in different final extent between IPSL and GFDL
-      # trial<-filter(trial, y <= -35)
-      # class      : Extent
-      # xmin       : -180
-      # xmax       : 180
-      # ymin       : -79
-      # ymax       : -35
-      #
-      # class      : Extent
-      # xmin       : -180
-      # xmax       : 180
-      # ymin       : -78
-      # ymax       : -35
-      # pick the minimum common denominator and cut lower lat.
-      # This does not happen when using polygons (above) as the lower part of the polygon of is land
-
-      trial<-filter(trial, y <= -40, y >= -78)
-      
-      # ## for ecotroph checking: 
-      # trial<-filter(trial, y <= -60, y >= -78)
-      # # If outliers are removed (see above for explanation) 
-      # # plots from the two approaches are the same. 
-      # # no need to delete them, just to se a meaningful range of values to consider in maps
-      # mistmatches<-filter(trial, index_1 > 49.15919 | index_1 < 8.972864)
-      # trial<-filter(trial, index_1 >= 8.972864 & index_1 <= 49.15919)
-      
-      brick_data_annual_subset_mean_ant[[i]]<-rasterFromXYZ(trial, crs = crs(brick_data_annual_subset_mean[[i]]))
-  }
-
-  # # same output as above when extracting using polygon
+  bb <- as(extent(-180, 180, -78, -40), 'SpatialPolygons')
+  crs(bb) <- crs(brick_data_annual_subset_mean[[1]])
+  brick_data_annual_subset_mean_ant<-lapply(brick_data_annual_subset_mean, function(x) crop(x,bb))
+  
+  # # CHECK
+  # plot(brick_data_annual_subset_mean[[2]])
   # plot(brick_data_annual_subset_mean_ant[[2]])
 
-  # unit conversion: from g m-2 to g C m-2 for better comparison with inputs   
+  ########## unit conversion ---- 
+  # from g m-2 to g C m-2 for better comparison with inputs   
   if(b_units == "g m-2"){
     brick_data_annual_subset_mean_ant = lapply(brick_data_annual_subset_mean_ant, FUN = function(x) x/10)
     b_units = "g C m-2"}
+  
+  # # CHECK 
+  # plot(brick_data_annual_subset_mean_ant[[2]])
   
   rm(brick_data, brick_data_annual, brick_data_annual_subset, indices, indices2, indices_subset3, indices_position3, brick_data_annual_subset_mean, indices4) # remove objects that are not needed 
   
@@ -377,14 +475,22 @@ extract_antarctica<-function(netcdf, file = "new"){
 
 # Extract data from climate input netCDF ----
 
-extract_antarctica_inputs<-function(netcdf){
+extract_antarctica_inputs<-function(netcdf, 
+                                    history_year1,
+                                    history_year2,
+                                    future_year1,
+                                    future_year2){
   
-  # trial
-  # netcdf = "gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc"
-
+  # # trial
+  # netcdf = netcdf_phyto[1]
+  # history_year1 =1990
+  # history_year2 =1999
+  # future_year1 =NA
+  # future_year2= NA
+  
   if(file.exists(file.path(dir, netcdf))){
     
-    ########## extract info from netcdf name
+    ########## extract info from netcdf name ----
     model = sub("\\_.*", "", netcdf)
     
     if(str_detect(netcdf, "gfdl", negate = FALSE)){
@@ -416,37 +522,51 @@ extract_antarctica_inputs<-function(netcdf){
     lon <- ncvar_get(nc_data, "lon")
     lat <- ncvar_get(nc_data, "lat", verbose = F)
     
-    # ###### WARNING problem with time vector - can this be due to calendar 365_day?? 
-    # t_units<-ncatt_get(nc_data, "time", "units")$value
-    # t_problem<-ncvar_get(nc_data, "time")
-    # t_problem[1]
-    # length(t_problem)[1]
-    # t_extract_problem<-as.character(nc.get.time.series(nc_data))
-    # t_extract_problem[1]
-    # t_extract_problem[length(t_extract_problem)]
-    # # same as (but not with MEMs): 
-    # trial<-as.character(nc.get.time.series(nc_data, correct.for.gregorian.julian = TRUE))
-    # trial[1]
-    # trial[length(trial)]
+    # check function below re time vector
+    t_units<-ncatt_get(nc_data, "time", "units")$value
     
-    # overwrite t: 
+    # get time vector based on file name
+    if(str_detect(netcdf, "1850", negate = FALSE)){
+      stTime = "1850-1-1"
+      enTime = "2014-12-31"
+    }else if (str_detect(netcdf, "1950", negate = FALSE)){
+      stTime = "1950-1-1"
+      enTime = "2014-12-31"
+    }else if (str_detect(netcdf, "2015", negate = FALSE)){
+      stTime = "2015-1-1"
+      enTime = "2100-12-31"
+    }
+    
+    if(time_step == "monthly"){
+      time_step_vector = "month"
+    }else if(time_step == "annual"){
+      time_step_vector = "year"
+    }
+    
     library(lubridate) # https://data.library.virginia.edu/working-with-dates-and-time-in-r-using-the-lubridate-package/
-    t<- as.character(seq(ymd("1850-1-1"), ymd("2014-12-31"), by = "month"))
+    t1<- as.character(seq(ymd(stTime), ymd(enTime), by = time_step_vector))
+    print(paste("Start time from file name ",t1[1], sep = ""))
+    print(paste("End time from file name ",t1[length(t1)], sep = ""))
     
-    # # CHECK
-    # length(t) #1980
-    # length(t_extract_problem) # 1980
-    # length(t_problem) # 1980
-    # t[1]
-    # t[length(t)]
+    # get time vector based on built in function 
+    t <- as.character(nc.get.time.series(nc_data))
+    print(paste("Start time with built in function ",t[1], sep = ""))
+    print(paste("End time with built in function ",t[length(t)], sep = ""))
     
-    if(str_detect(netcdf, "phyc", negate = FALSE)){
+    if((t1[1] != t[1]) | (t1[length(t1)] != t[length(t)])){
+      warning(paste(model, esm, scenario, "incorrect time vector", sep = " "), immediate. = TRUE)
+      ## trust the vector from file name (this function does not work with inputs)
+      t<-t1
+    }
+    
+    if(str_detect(netcdf, "phyc-vint", negate = FALSE)){
       variable = "phyc-vint"
-    }else if (str_detect(netcdf, "zooc", negate = FALSE)){
+    }else if (str_detect(netcdf, "zooc-vint", negate = FALSE)){
       variable = "zooc-vint"
     }
     
     b_units<-ncatt_get(nc_data, variable, "units")$value
+    missingValues<-ncatt_get(nc_data, variable, "missing_value")$value
     
     nc_close(nc_data)
     
@@ -495,59 +615,76 @@ extract_antarctica_inputs<-function(netcdf){
     # plot(brick_data[[1980]])
     # extent(brick_data)
     
-    ########## 1 - calculate maps of annual means 
+    # check if land is specified as missingValues or as NA
+    # options(scipen=999)
+    trial<-brick_data[[1]] # take first year
+    if(is.null(trial[trial == missingValues]) == FALSE){ # if there are missingValues cells 
+      warning(paste(model, scenario, "missing values not as NAs", sep = " "), immediate. = TRUE)
+      brick_data[brick_data == missingValues]<-NA
+    }
+    # # back check 
+    # plot(trial)
+    # trial[is.na(trial)] <- missingValues
+    # plot(trial)
+  
+    ########## calculate maps of annual means ----
     
     # remove 1850-1950 as not all models have them
     indices<-t
     
-    if(scenario %in% c("historical")){
+    if(scenario %in% c("historical", "picontrol_hist")){
       indices_subset<-indices[indices>="1950-01-01"]
+      # check
+      # indices[indices_position[1]]  
       indices_position<-match(indices_subset,indices)
       brick_data_subset<-raster::subset(brick_data, indices_position)
+      # check 
+      # dim(brick_data)[3]-dim(brick_data_subset)[3] # 100 0r 1200 (100*12)
+    }else if (scenario %in% c("ssp1","ssp5","picontrol_fut")){
+      brick_data_subset<-brick_data
     }
-    
-    # calculate annual means
-    # WARNING - try median instead 
-    
-    
     
     # https://gis.stackexchange.com/questions/257090/calculating-and-displaying-mean-annual-precipitation-from-cru-data
     # create vector to serve as index
     
-    if(scenario %in% c("historical")){ 
+    if(scenario %in% c("historical", "picontrol_hist")){ 
       indices2<-as.Date(indices_subset)
-    }
+    }else if(scenario %in% c("ssp1", "ssp5", "picontrol_fut")){
+      indices2<-as.Date(t)}
     
     indices2<-format(indices2, format = "%Y")
     indices2<-as.numeric(indices2)
     brick_data_annual<-stackApply(brick_data_subset, indices=indices2, fun=mean)
     
     # # CHECK
-    # length(unique(indices2))
-    # dim(brick_data_annual)
+    # length(unique(indices2)) # 65
+    # dim(brick_data_annual)[3] # 65
     # plot(brick_data_annual[[15]])
+    # dim(brick_data_subset)[3]/12 # 65 
+    # now names have become dates here too 
+    # names(brick_data_annual)[1] # 1950, 1951 etc... 
+    # names(brick_data_annual)[length(names(brick_data_annual))] # 2014
     
-    ########## 2 - calculate mean over period and save for maps
+    ########## calculate mean over period and save for maps ----
     
     # subset - choose a period for maps
-    if(scenario %in% c("historical")){
+    if(scenario %in% c("historical", "picontrol_hist")){
       indices_subset3<-unique(indices2)
-      indices_subset3<-indices_subset3[indices_subset3>=1990 & indices_subset3<=1999] # WARNING this is what Phil asked for 
+      indices_subset3<-indices_subset3[indices_subset3>=history_year1 & indices_subset3<=history_year2]
+    }else if(scenario %in% c("ssp1", "ssp5", "picontrol_fut")){
+      indices_subset3<-unique(indices2)
+      indices_subset3<-indices_subset3[indices_subset3>=future_year1 & indices_subset3<=future_year2]
     }
     
     indices_position3<-match(indices_subset3,unique(indices2))
     brick_data_annual_subset<-raster::subset(brick_data_annual, indices_position3)
     
     # # CHECK
-    # dim(brick_data_annual_subset)
+    # dim(brick_data_annual_subset) # 10
     # extent(brick_data_annual_subset)
     # plot(brick_data_annual_subset[[10]])
-    
-    # mean
-    # WARNING - try median instead - see plots 
-    
-    
-    
+    # names(brick_data_annual_subset)[1] # 1990 for history
+    # names(brick_data_annual_subset)[length(names(brick_data_annual_subset))] # 1999
     
     indices4<-rep(1, length(indices_subset3))
     brick_data_annual_subset_mean<-stackApply(brick_data_annual_subset, indices=indices4, fun=mean)
@@ -556,48 +693,25 @@ extract_antarctica_inputs<-function(netcdf){
     # dim(brick_data_annual_subset_mean)
     # plot(brick_data_annual_subset_mean)
     
-    # SELECT SO polygon:  
+    ########## select SO ----
+    # cut values of lat <e.g. -50 for comparison with Yang et al. 2022
     
-    # # USING World_Seas_IHO_v3
-    # library(sf)
-    # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/World_Seas_IHO_v3/World_Seas_IHO_v3.shp")
-    # ant<-shape[63,] # Southern Ocean  
-    # brick_data_annual_subset_mean_ant<-list()
-    # 
-    # trial<-brick_data_annual_subset_mean
-    #   
-    # # this is wrong - something happens here ... 
-    # # extent(trial) <- extent(shape)
-    # # this does not do much .... 
-    # crs(trial) <- crs(shape) 
-    #   
-    # # this seems to work but 
-    # temp<-crop(trial, extent(ant))
-    # trial2<-mask(temp, ant)
-    # # plot(trial2)
-    #   
-    # brick_data_annual_subset_mean_ant<-trial2
-    # 
-    # # # CHECK
-    # # dim(brick_data_annual_subset_mean_ant)
-    # # plot(brick_data_annual_subset_mean_ant)
-    # # extent(brick_data_annual_subset_mean_ant)
-    # 
+    # step1<-as.data.frame(rasterToPoints(brick_data_annual_subset_mean))
+    # step2<-filter(step1, y <= -40, y >= -78)
+    # brick_data_annual_subset_mean_ant<-rasterFromXYZ(step2, crs = crs(brick_data_annual_subset_mean))
     
-    #### OR cut values of lat <e.g. -50 for comparison with Yang et al. 2022
+    bb <- as(extent(-180, 180, -78, -40), 'SpatialPolygons')
+    crs(bb) <- crs(brick_data_annual_subset_mean)
+    brick_data_annual_subset_mean_ant<-crop(brick_data_annual_subset_mean,bb)
     
-    trial<-brick_data_annual_subset_mean
-    trial<-as.data.frame(rasterToPoints(trial))
-    # trial<-filter(trial, y < -35)
-    # see above for reason on selecting -78 too. 
-    trial<-filter(trial, y <= -40, y >= -78)
-      
-    brick_data_annual_subset_mean_ant<-rasterFromXYZ(trial, crs = crs(brick_data_annual_subset_mean))
-    # plot(brick_data_annual_subset_mean_ant)
+    # CHECK 
+    # plot(brick_data_annual_subset_mean)
+    # plot(brick_data_annual_subset_mean_ant) # compare to plot above to check - OK
 
+    ########## unit conversion ----
     # Units: from mol m-2 to g C m-2
     if(b_units == "mol m-2"){
-      brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12.01
+      brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12
       b_units == "g C m-2"}
     
     rm(brick_data, brick_data_annual, brick_data_annual_subset, indices, indices2, indices_subset3, indices_position3, brick_data_annual_subset_mean, indices4) # remove objects that are not needed 

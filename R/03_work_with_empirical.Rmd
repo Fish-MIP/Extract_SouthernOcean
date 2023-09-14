@@ -17,14 +17,9 @@ consider phyto and zooplankton data fro Yang et al. 2022
 
 ### Data source 
 
-provided by Svenja and moved to: 
-
-*NOT WORKING* need to ask Geli... 
-In the meantime I uploaded the files into the project 
-
-scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/Desktop/SouthernOcean_data/chla_summer_data.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
-
-scp -i /Users/camillan/.ssh/key_gem -r /Users/camillan/Desktop/SouthernOcean_data/zooplankton_summer_data.csv ubuntu@131.217.174.44:/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/YangEtAl2022_data/
+Provided by Svenja (Yang email with data attached adn explained) and moved to the project Tmp_data folder: 
+Zooplankton_summer_data.csv
+chla_summer_data_Dec_Mar.csv
 
 ### Set environment 
 
@@ -48,7 +43,7 @@ summarise<-dplyr::summarise
 
 ```{r}
 
-zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/Zooplankton_summer_data.csv", data.table = FALSE)
+zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Input/Zooplankton_summer_data.csv", data.table = FALSE)
 head(zoop)
 # from Email Svenja 
 # you can find the "summer data" (n=2028) in sheet 2 of the attachment. The mean biomass in each cell (2° latitude × 5° logitiude) is just the simple arithmetic mean of all biomass in that cell. For example, if 40 records were found in a specific cell (160°E-165°E, 60°S-62°S), the value shown in our Fig. 2b is the mean of these 40 value. You can use "fishnet" tool in Arcgis (Arctoolbox/Data Management Tools/Sampling/Create Fishnet) to finish the average procedure. I wish this helps and feel free to contact me if you have any questions about the data or the use of Arcgis.
@@ -60,8 +55,8 @@ colnames(zoop) <- c('X', 'Y', 'Z')
 zoop<-as.matrix(zoop)
 
 e <- extent(zoop[,1:2])
-e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
-# e <- extent(-180, 180, -78, -40) # change to match modelled data
+# e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
+e <- extent(-180, 180, -78, -40) # change to match modelled data
 # e <- e + 1000 # add this as all y's are the same - no need for your data
 # # this needs to be 2 lat by 5 long 
 columns<-360/5 
@@ -73,7 +68,7 @@ plot(x)
 zoop_raster<-x
 crs(zoop_raster) <- "+proj=longlat +datum=WGS84 +no_defs" 
 
-phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Tmp_data/chla_summer_data_Dec_Mar.csv", data.table = FALSE)
+phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Input/chla_summer_data_Dec_Mar.csv", data.table = FALSE)
 # from Email Svenja 
 # Please find attached the Chl-a data from Guang to plot the circumpolar phytoplankton data. If I understood correctly, the data are in Chl mg m-3. To convert to depth-integrated g Chl m-2, you need to multiply the values by 41. Then, they assumed a C:Chl-a ratio of 60.5.
 head(phyt)
@@ -82,12 +77,12 @@ colnames(phyt) <- c('X', 'Y', 'Z')
 # checked with Svenja
 phyt$Z<-phyt$Z*41
 phyt$Z<-phyt$Z*60.5
-phyt$Z<-phyt$Z/1000
+phyt$Z<-phyt$Z/1000 # from mg to g
 
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
-e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
-# e <- extent(-180, 180, -78, -40) # change to match modelled data
+# e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
+e <- extent(-180, 180, -78, -40) # change to match modelled data
 columns<-360/5 
 rows<-(abs(e[3])-abs(e[4]))/2 
 r <- raster(e, ncol=columns, nrow=rows) 
