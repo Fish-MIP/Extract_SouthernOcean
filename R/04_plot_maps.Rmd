@@ -269,7 +269,7 @@ if(scale_Fig4 == "raw"){
 names(phyt_raster)<-"index_1" 
 phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
 phyto_emp_plot<-phyto_emp_plot+ggtitle("a) Phytoplankton empirical")
-phyto_emp_plot
+# phyto_emp_plot
 
 # zoop_raster_trial<-zoop_raster
 # zoop_raster_trial[is.na(zoop_raster_trial)]<-Inf
@@ -277,7 +277,7 @@ phyto_emp_plot
 names(zoop_raster)<-"index_1" 
 zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
 zoop_emp_plot<-zoop_emp_plot+ggtitle("b) Zooplankton empirical")
-zoop_emp_plot
+# zoop_emp_plot
 
 # names(zoop_raster_trial)<-"index_1" 
 # zoop_emp_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster_trial, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
@@ -384,6 +384,8 @@ if(scale_FigS3 == "raw"){
   legend_name = expression(log~g~C~m^{-2}) 
 }
 
+legend_name = "Ratio" # remove legend as this is a ratio where g C m-2 cancelled out
+
 # names(ltl)<-"index_1" 
 # ltl_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = ltl, proj = circumpolarCRS, legend_name = legend_name, min = ltl@data@min, max = ltl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n)
 # 
@@ -397,7 +399,6 @@ if(scale_FigS3 == "raw"){
 
 color_scale = "divergent"
 breaks_vector_n = 11
-
 
 names(tl2)<-"index_1"
 tl2_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl2, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS3, max = max_FigS3, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n) 

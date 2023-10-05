@@ -172,7 +172,7 @@ extract_antarctica<-function(netcdf,
   # plot(brick_data[[1]][[1004]])
   # plot(brick_data[[4]][[dim(brick_data[[2]])[3]]])
   
-  ### Data is specified in file names amready... but not for the inputs.
+  ### Data is specified in file names already... but not for the inputs.
   # BOATS example
   # class      : RasterBrick 
   # dimensions : 180, 360, 64800, 780  (nrow, ncol, ncell, nlayers)
