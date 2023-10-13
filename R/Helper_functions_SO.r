@@ -446,7 +446,7 @@ extract_antarctica<-function(netcdf,
   # 
   # 
 
-  bb <- as(extent(-180, 180, -78, -40), 'SpatialPolygons')
+  bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons') 
   crs(bb) <- crs(brick_data_annual_subset_mean[[1]])
   brick_data_annual_subset_mean_ant<-lapply(brick_data_annual_subset_mean, function(x) crop(x,bb))
   
@@ -700,7 +700,7 @@ extract_antarctica_inputs<-function(netcdf,
     # step2<-filter(step1, y <= -40, y >= -78)
     # brick_data_annual_subset_mean_ant<-rasterFromXYZ(step2, crs = crs(brick_data_annual_subset_mean))
     
-    bb <- as(extent(-180, 180, -78, -40), 'SpatialPolygons')
+    bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons')
     crs(bb) <- crs(brick_data_annual_subset_mean)
     brick_data_annual_subset_mean_ant<-crop(brick_data_annual_subset_mean,bb)
     

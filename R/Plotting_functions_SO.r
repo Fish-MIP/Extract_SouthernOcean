@@ -34,6 +34,7 @@ plot_SO<-function(wmap_df = antmap_df,
   data_to_plot <- st_as_sf(data_to_plot) # convert dataframe to sf object 
   data_to_plot <- st_transform(data_to_plot, crs = st_crs(circumpolarCRS)) # convert sf object to circumpolar Projection
   
+  
   if(scale == "log"){
     # head(data_to_plot)
     data_to_plot$index_1<-log(data_to_plot$index_1)
@@ -80,32 +81,14 @@ plot_SO<-function(wmap_df = antmap_df,
   
   if(color_scale == "viridis"){
     
-    # p1<-ggplot() +
-    #   geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-    #   geom_polygon(data=wmap_df1, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
-    #   # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned
-    #   scale_fill_viridis_b(guide = guide_colorbar(
-    #     title = legend_name,
-    #     title.position = "top",
-    #     title.hjust = 0.5),
-    #     option = "D", # this is viridis as option, incread of e.g. magma
-    #     breaks = breaks_vector,
-    #     labels = labels_vector,
-    #     limits=c(min, max),
-    #     oob = scales::squish
-    #   ) +
-    #   scale_x_continuous(expand=c(0,0))+ # this should get rid of the white space around the map... 
-    #   scale_y_continuous(expand=c(0,0))
-    # 
-    # p1
-    
     ### alternative 
     # https://stackoverflow.com/questions/48816773/polar-stereographic-map-in-r
     # see below addings 
     
     p1<-ggplot() +
       geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-      geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
+      geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+      # geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
       # scale_fill_viridis_d is for discrete, c is for continuous and b is for binned
       scale_fill_viridis_b(guide = guide_colorbar(
         title = legend_name,
@@ -121,8 +104,8 @@ plot_SO<-function(wmap_df = antmap_df,
 
       p1<-ggplot() +
         geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-        geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
-        # geom_polygon(data=wmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
+        geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+        # geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
         # https://colorbrewer2.org/#type=sequential&scheme=Blues&n=3
         scale_fill_gradient(guide = guide_colorbar(
          title = legend_name,
@@ -139,8 +122,8 @@ plot_SO<-function(wmap_df = antmap_df,
       
       p1<-ggplot() +
         geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
-        # geom_polygon(data=wmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0.25) +
-        geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
+        geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+        # geom_sf(data=wmap_df, fill = "grey70", colour = NA, linewidth = 0)+
         scale_fill_continuous_divergingx(palette = 'Geyser', # ArmyRose
                                          mid = 1,
                                          guide = guide_colorbar(
@@ -168,7 +151,7 @@ plot_SO<-function(wmap_df = antmap_df,
     # Adds axes
     # geom_hline(aes(yintercept = -5791903.876384), size = 1, color = "red")  + # the -40
     geom_segment(aes(y = 0, yend =  Y_lon_segment, x = 0, xend = X_lon_segment), 
-                 color = "black", size = 0.25, linetype = 'dashed')
+                 color = "grey50", linewidth = 0.25, linetype = 'dashed')
     # scale_x_continuous(expand=c(0,0))+ # this should get rid of the white space around the map...
     # scale_y_continuous(expand=c(0,0))
   
