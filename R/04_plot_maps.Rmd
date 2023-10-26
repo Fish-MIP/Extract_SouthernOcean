@@ -359,6 +359,35 @@ phyto_plot2_S1B<-phyto_plot2_S1B+ggtitle("c) Phytoplankton modelled")
 zoo_plot2_S1B<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min =mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n) 
 zoo_plot2_S1B<-zoo_plot2_S1B+ggtitle("d) Zooplankton modelled")
 
+### ESMs data for Map of plankton from IPSL and GFDLS as separate for Colleen to check -----
+
+load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+
+phyto_ipsl<-phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+
+phyto_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_ipsl@data@min, max = phyto_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+phyto_ipsl_map<-phyto_ipsl_map+ggtitle("Phytoplankton IPSL")
+
+phyto_gfdl<-phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+
+phyto_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_gfdl@data@min, max = phyto_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+phyto_gfdl_map<-phyto_gfdl_map+ggtitle("Phytoplankton GFDL")
+
+phyto_gfdl_map+phyto_ipsl_map
+
+zoo_ipsl<-zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+
+zoo_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_ipsl@data@min, max = zoo_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+zoo_ipsl_map<-zoo_ipsl_map+ggtitle("Zooplankton IPSL")
+
+zoo_gfdl<-zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+
+zoo_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_gfdl@data@min, max = zoo_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+zoo_gfdl_map<-zoo_gfdl_map+ggtitle("Zooplankton GFDL")
+
+zoo_gfdl_map+zoo_ipsl_map
+
+
 ### MEMs data for Fig S2 -----
 # Fig S2. Depth integrated, size-resolved total consumers biomass projections averaged across the 1990-1999 decade and six FishMIP Marine Ecosystem Models able to produce this output and forced using IPSL-CM6A-LR and GFDL-ESM4 climate data. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg, f) >100kg. Data available at https://data.isimip.org/, ISIMIP3b simulation round. The range of values is kept between 0.5 and 5 g C m-2, in log scale, for all size classes for better comparison across plots and with maps of plankton (Fig. 4 and S-Fig.1).
 
