@@ -20,9 +20,9 @@ zooc-vint: Integrated Total Zooplankton Carbon Concentration
 
 ### Data source 
 
-Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocl: phyc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
+Dowloaded on 30/04/2023 - Phyto and zooplnkton are downloaded from DKRZ as per ISIMIP3b protocol: phyc and zooc (total concentration - https://fish-mip.github.io/protocols.html), vertically integrated. 
 
-We consider ISIMIP3b data as we have MEM outputs linked to these inputs for ISIMIP3b and not 3a yet. 
+We consider ISIMIP3b data as we have MEM outputs linked to these inputs for ISIMIP3b.
 
 scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/GFDL-ESM4/gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
@@ -33,19 +33,22 @@ scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/oc
 scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
 Downloaded again on 25/08/2023 to check any change to the time dimension
-Check if there is 3d data for both phyc and zooc - yes both variables are available in 3D and vertically integrated
 
-### *TO CHECK* 
+### download mesozooplankton 
 
-File orientation (upside-down?) and check same things as for 01 - OK
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/GFDL-ESM4/gfdl-esm4_r1i1p1f1_historical_zmeso-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
 
-Strange time dimension now adjusted but this is my interpretation. Asked Matthias, interpretation is OK - starting value is Jan 1850.  
+scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/InputData/climate/ocean/uncorrected/global/monthly/historical/IPSL-CM6A-LR/ipsl-cm6a-lr_r1i1p1f1_historical_zmeso-vint_60arcmin_global_monthly_1850_2014.nc /rd/gem/private/users/camillan/Extract_SouthernOcean_Data
+
+### Checks 
+
+Time dimension now adjusted. Asked Matthias, interpretation is OK - starting value is Jan 1850.  
 
 Final values are mean mol m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values, we average instead of sum across months. For NPP and catch we would sum across months to get yearly valuee as these are rates with a time dimension.      
 
 To transform from mol m-2 to g C m-2 I did X12
 
-For better comparison use **zmeso-vint**? zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration. Discussed with Ryan too - not fully understanding this output -e.g. which size included and how this has been created - would use total zooplankton instead and specify in figs.  
+For better comparison use zmeso-vint: Integrated Mesozooplankton/Large Zoo Carbon Concentration? Discussed with Ryan - not fully understanding this output -e.g. which size included and how this has been created - would use total zooplankton instead as the one commonly used in FishMIP papers and plots and specify in figs. checked mesozooplankton too: 
 
 ### Set environment 
 
@@ -75,6 +78,8 @@ summarise<-dplyr::summarise
 # load functions 
 source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
 
+zoopl = "zoo" # "zoo" # "meso"
+
 ```
 
 ### Read in files and extract modelled data at global scale
@@ -88,31 +93,42 @@ dir<-"/rd/gem/private/users/camillan/Extract_SouthernOcean_Data"
 netcdf_phyto= c("gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc",
                 "ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc")
 
-netcdf_zoo= c("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
-              "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
+if(zoopl == "zoo"){
+  netcdf_zoo= c("gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc",
+                "ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc")
+}else if (zoopl == "meso"){
+  netcdf_zoo= c("gfdl-esm4_r1i1p1f1_historical_zmeso-vint_60arcmin_global_monthly_1850_2014.nc",
+                "ipsl-cm6a-lr_r1i1p1f1_historical_zmeso-vint_60arcmin_global_monthly_1850_2014.nc")
+}
 
 # apply function in // ----
 
-history_year1 = 1990
-history_year2 = 1999
+history_year1 = 1998 # 1998 # 1990 # December to March 1998-2020 for phyto and unknown for meso. So do 1998-2014 (last year of historical) 
+history_year2 = 2014 # 2014 #1999
 future_year1 = NA
 future_year2 = NA
+season = "summer" #"summer" # added argument, if consider the whole year set this to NA
 
-phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2), mc.cores = detectCores()-2)
+phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2, season = season), mc.cores = detectCores()-2)
 
 names(phyto_ant) <- netcdf_phyto
 
-zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2), mc.cores = detectCores()-2)
+zoo_ant<-mclapply(netcdf_zoo, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2, season = season), mc.cores = detectCores()-2)
 
 names(zoo_ant) <- netcdf_zoo
 
 ```
 
-### save data
+### save data 
 
 ```{r}
 
-save(phyto_ant, zoo_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+## NOTE - if you run this you need to adjust as per naming below 
+# if(season == "summer"){
+#   save(phyto_ant, zoo_ant, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(), "_02_extract_input_SO_summer.RData", sep =""))
+# }else if(season == "year") {
+#   save(phyto_ant, zoo_ant, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(), "_02_extract_input_SO.RData", sep = ""))
+# }
 
 ```
 
@@ -120,8 +136,13 @@ save(phyto_ant, zoo_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_
 
 ```{r}
 
-rm(list=ls())
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+# rm(list=ls())
+# 
+# if(season == "summer"){
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_summer.RData")
+# }else if(season == "year") {
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+# }
 
 removeNA = "narmF" # narmT or narmF
 
@@ -134,24 +155,24 @@ if(removeNA == "narmT"){
   mean_phyto<-stackApply(file_phyto, indices =  rep(1,nlayers(file_phyto)), fun = mean, na.rm = TRUE)
   mean_zoo<-stackApply(file_zoo, indices =  rep(1,nlayers(file_zoo)), fun = mean, na.rm = TRUE)
 
-  # CHECK
-  # calculate mean using other approach for size class 2 and compare results to above approach
-
-  trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
-
-  trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-  for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
-
-  trial3<-do.call(rbind.data.frame, trial2) %>%
-    group_by(x,y) %>%
-    summarise(mean = mean(index_1, na.rm=TRUE)) %>%
-    ungroup
-
-  trial_raster<-rasterFromXYZ(trial3)
-
-  # same outputs 
-  plot(trial_raster)
-  plot(mean_zoo)
+  # # CHECK
+  # # calculate mean using other approach for size class 2 and compare results to above approach
+  # 
+  # trial<-list(zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`, zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`)
+  # 
+  # trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+  # for(i in 1:length(trial2)){trial2[[i]]$model = names(trial2)[i]}
+  # 
+  # trial3<-do.call(rbind.data.frame, trial2) %>%
+  #   group_by(x,y) %>%
+  #   summarise(mean = mean(index_1, na.rm=TRUE)) %>%
+  #   ungroup
+  # 
+  # trial_raster<-rasterFromXYZ(trial3)
+  # 
+  # # same outputs 
+  # plot(trial_raster)
+  # plot(mean_zoo)
 
 }else if (removeNA == "narmF"){
   
@@ -166,10 +187,22 @@ if(removeNA == "narmT"){
 
 ```{r}
 
-if(removeNA == "narmT"){
-  save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
-}else if(removeNA == "narmF"){
-  save(mean_phyto, mean_zoo, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
-}
+save(mean_phyto, mean_zoo, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",  Sys.Date(), "_02_extract_input_SO_means_", removeNA, "_", season, "_zooType_", zoopl, ".RData", sep = ""))
+
+# old version - yearly, 1990s, zoo outputs are saved with these names
+
+# if(season == "year"){
+#   if(removeNA == "narmT"){
+#     save(mean_phyto, mean_zoo, file = pate( "/home/ubuntu/Extract_SouthernOcean/Tmp_data/",  Sys.Date(), "_02_extract_input_SO_means.RData", sep = ""))
+#   }else if(removeNA == "narmF"){
+#     save(mean_phyto, mean_zoo, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(),"_02_extract_input_SO_means_narmF.RData", sep = ""))
+#   }
+# }else if (season == "summer")  {
+#     if(removeNA == "narmT"){
+#     save(mean_phyto, mean_zoo, file = paste( "/home/ubuntu/Extract_SouthernOcean/Tmp_data/",  Sys.Date(),"_02_extract_input_SO_means_summer.RData", sep = ""))
+#   }else if(removeNA == "narmF"){
+#     save(mean_phyto, mean_zoo, file = paste( "/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(),"_02_extract_input_SO_means_narmF_summer.RData", sep = ""))
+#   }
+# }
 
 ```

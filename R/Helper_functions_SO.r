@@ -479,14 +479,16 @@ extract_antarctica_inputs<-function(netcdf,
                                     history_year1,
                                     history_year2,
                                     future_year1,
-                                    future_year2){
+                                    future_year2,
+                                    season){
   
   # # trial
-  # netcdf = netcdf_phyto[1]
+  # netcdf = netcdf_zoo[1]
   # history_year1 =1990
   # history_year2 =1999
   # future_year1 =NA
   # future_year2= NA
+  # season = "summer"
   
   if(file.exists(file.path(dir, netcdf))){
     
@@ -563,6 +565,8 @@ extract_antarctica_inputs<-function(netcdf,
       variable = "phyc-vint"
     }else if (str_detect(netcdf, "zooc-vint", negate = FALSE)){
       variable = "zooc-vint"
+    }else if (str_detect(netcdf, "zmeso-vint", negate = FALSE)){
+      variable = "zmeso-vint"
     }
     
     b_units<-ncatt_get(nc_data, variable, "units")$value
@@ -634,15 +638,35 @@ extract_antarctica_inputs<-function(netcdf,
     
     if(scenario %in% c("historical", "picontrol_hist")){
       indices_subset<-indices[indices>="1950-01-01"]
+      indices_position<-match(indices_subset,indices)
       # check
       # indices[indices_position[1]]  
-      indices_position<-match(indices_subset,indices)
+      # indices[1201]
       brick_data_subset<-raster::subset(brick_data, indices_position)
       # check 
       # dim(brick_data)[3]-dim(brick_data_subset)[3] # 100 0r 1200 (100*12)
+      names(brick_data_subset)<-indices_subset
     }else if (scenario %in% c("ssp1","ssp5","picontrol_fut")){
       brick_data_subset<-brick_data
+      names(brick_data_subset)<-t
     }
+    
+    ######### adding - consider only summer months December to March (12 to 03)
+    if(season == "summer"){
+      if(scenario %in% c("historical", "picontrol_hist")){
+        indices_subset_summer<-indices_subset
+      }else if (scenario %in% c("ssp1","ssp5","picontrol_fut")){
+        indices_subset_summer<-t
+      }
+      
+      indices_subset_summer<-indices_subset_summer[month(indices_subset_summer) %in% month(c(01,02,03,12))]
+      indices_position_summer<-match(indices_subset_summer,indices_subset)
+      # check 
+      # indices_subset[indices_position_summer[10]]
+      brick_data_subset_summer<-raster::subset(brick_data_subset, indices_position_summer)
+      brick_data_subset<-brick_data_subset_summer
+      indices_subset<-indices_subset_summer
+      }
     
     # https://gis.stackexchange.com/questions/257090/calculating-and-displaying-mean-annual-precipitation-from-cru-data
     # create vector to serve as index
@@ -680,6 +704,7 @@ extract_antarctica_inputs<-function(netcdf,
     brick_data_annual_subset<-raster::subset(brick_data_annual, indices_position3)
     
     # # CHECK
+    # names(brick_data_annual_subset)
     # dim(brick_data_annual_subset) # 10
     # extent(brick_data_annual_subset)
     # plot(brick_data_annual_subset[[10]])
@@ -710,9 +735,14 @@ extract_antarctica_inputs<-function(netcdf,
 
     ########## unit conversion ----
     # Units: from mol m-2 to g C m-2
+    # b_units = "mol m-2"
     if(b_units == "mol m-2"){
       brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12
-      b_units == "g C m-2"}
+      b_units = "g C m-2"
+      }
+    
+    # check 
+    # plot(brick_data_annual_subset_mean_ant)
     
     rm(brick_data, brick_data_annual, brick_data_annual_subset, indices, indices2, indices_subset3, indices_position3, brick_data_annual_subset_mean, indices4) # remove objects that are not needed 
     

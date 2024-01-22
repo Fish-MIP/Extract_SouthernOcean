@@ -125,6 +125,11 @@ max_FigS3 = 1.5 # 2 means that the higher trophic level is double the lower trop
 min_FigS4 = 0.5 
 max_FigS4 = 1.5 
 
+### plankton options (latest checks and versions)
+
+season = "summer" # "year"# "summer"
+zoopl = "zoo" # "zoo" # "meso"
+
 ```
 
 ## Load data means 
@@ -141,6 +146,11 @@ if(removeNA == "narmT"){
   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+}
+
+# overwrite 02 if season == summer and according to zoopl == either meso or zoo
+if (season == "summer"){
+  load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/2024-01-22_02_extract_input_SO_means_",removeNA,"_", season, "_zooType_", zoopl, ".RData", sep = ""))
 }
 
 ```
@@ -297,6 +307,7 @@ phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = 
 phyto_emp_plot<-phyto_emp_plot+ggtitle("a) Phytoplankton empirical")
 # phyto_emp_plot
 
+phyt_raster # range
 # zoop_raster_trial<-zoop_raster
 # zoop_raster_trial[is.na(zoop_raster_trial)]<-Inf
 
@@ -305,36 +316,19 @@ zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = c
 zoop_emp_plot<-zoop_emp_plot+ggtitle("b) Zooplankton empirical")
 # zoop_emp_plot
 
+zoop_raster# range
+
 ### ESMs data for Fig 4 -----
 
 phyto_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
 phyto_plot<-phyto_plot+ggtitle("c) Phytoplankton modelled")
 
+mean_phyto # range
+
 zoo_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n) 
 zoo_plot<-zoo_plot+ggtitle("d) Zooplankton modelled")
 
-# ### empirical data for Fig S1 -----
-#
-# 
-# if(scale_FigS1 == "raw"){
-#   legend_name = expression(g~C~m^{-2})
-# }else if(scale_FigS1 == "log"){
-#   legend_name = expression(log~g~C~m^{-2}) 
-# }
-# 
-# phyto_plot_emp2<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS1, max = max_FigS1, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# phyto_plot_emp2<-phyto_plot_emp2+ggtitle("a) Phytoplankton empirical")
-# 
-# zoo_plot_emp2<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS1, max = max_FigS1, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n) 
-# zoo_plot_emp2<-zoo_plot_emp2+ggtitle("b) Zooplankton empirical")
-# 
-# ### ESMs data for Fig S1 -----
-# 
-# phyto_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_phyto, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS1, max = max_FigS1, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# phyto_plot2<-phyto_plot2+ggtitle("c) Phytoplankton modelled")
-# 
-# zoo_plot2<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS1, max = max_FigS1, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n) 
-# zoo_plot2<-zoo_plot2+ggtitle("d) Zooplankton modelled")
+mean_zoo # range
 
 ### empirical data for Fig S1B -----
 # Fig S1. Depth integrated a) phytoplankton and b) mesozooplankton carbon biomass from Yang et al. 2022 and c) phytoplankton and d) zooplankton carbon concentration projections averaged across IPSL-CM6A-LR and GFDL-ESM4 Earth system models. Please refer to Fig. 4 for more details on data. Here, the range of values in the legend spans the minimum and the maximum value of plankton in each panel.
@@ -359,34 +353,33 @@ phyto_plot2_S1B<-phyto_plot2_S1B+ggtitle("c) Phytoplankton modelled")
 zoo_plot2_S1B<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min =mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n) 
 zoo_plot2_S1B<-zoo_plot2_S1B+ggtitle("d) Zooplankton modelled")
 
-### ESMs data for Map of plankton from IPSL and GFDLS as separate for Colleen to check -----
-
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
-
-phyto_ipsl<-phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
-
-phyto_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_ipsl@data@min, max = phyto_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-phyto_ipsl_map<-phyto_ipsl_map+ggtitle("Phytoplankton IPSL")
-
-phyto_gfdl<-phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
-
-phyto_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_gfdl@data@min, max = phyto_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-phyto_gfdl_map<-phyto_gfdl_map+ggtitle("Phytoplankton GFDL")
-
-phyto_gfdl_map+phyto_ipsl_map
-
-zoo_ipsl<-zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
-
-zoo_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_ipsl@data@min, max = zoo_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-zoo_ipsl_map<-zoo_ipsl_map+ggtitle("Zooplankton IPSL")
-
-zoo_gfdl<-zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
-
-zoo_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_gfdl@data@min, max = zoo_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-zoo_gfdl_map<-zoo_gfdl_map+ggtitle("Zooplankton GFDL")
-
-zoo_gfdl_map+zoo_ipsl_map
-
+# ### ESMs data for Map of plankton from IPSL and GFDLS as separate for Colleen to check -----
+# 
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
+# 
+# phyto_ipsl<-phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# phyto_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_ipsl@data@min, max = phyto_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# phyto_ipsl_map<-phyto_ipsl_map+ggtitle("Phytoplankton IPSL")
+# 
+# phyto_gfdl<-phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# phyto_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_gfdl@data@min, max = phyto_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# phyto_gfdl_map<-phyto_gfdl_map+ggtitle("Phytoplankton GFDL")
+# 
+# phyto_gfdl_map+phyto_ipsl_map
+# 
+# zoo_ipsl<-zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# zoo_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_ipsl@data@min, max = zoo_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# zoo_ipsl_map<-zoo_ipsl_map+ggtitle("Zooplankton IPSL")
+# 
+# zoo_gfdl<-zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# zoo_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_gfdl@data@min, max = zoo_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# zoo_gfdl_map<-zoo_gfdl_map+ggtitle("Zooplankton GFDL")
+# 
+# zoo_gfdl_map+zoo_ipsl_map
 
 ### MEMs data for Fig S2 -----
 # Fig S2. Depth integrated, size-resolved total consumers biomass projections averaged across the 1990-1999 decade and six FishMIP Marine Ecosystem Models able to produce this output and forced using IPSL-CM6A-LR and GFDL-ESM4 climate data. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg, f) >100kg. Data available at https://data.isimip.org/, ISIMIP3b simulation round. The range of values is kept between 0.5 and 5 g C m-2, in log scale, for all size classes for better comparison across plots and with maps of plankton (Fig. 4 and S-Fig.1).
@@ -493,17 +486,25 @@ tl1_modelled_plot<-tl1_modelled_plot+ggtitle("a) Modelled biomass zooplankon / p
 
 ```{r}
 
+## NOTE: old plots without season and zooType info use yearly plankton values and total zooplankton data. The newer alternatives are done for checking and figs will be updated depending on Philip's view. 
+
+## NOTE: only Fig4, S1 and S3 should be considered with options season = summer and zoopl = meso as the other should use yearly values and total zooplankton 
+
 #### Fig 0 check empirical ----
 
-p_final_Fig0<-
-  check_phyto + check_zoo +
-  plot_layout(ncol = 2, nrow = 1)
+if(season == "year"){
+  
+  p_final_Fig0<-
+    check_phyto + check_zoo +
+    plot_layout(ncol = 2, nrow = 1)
 
-name_Fig0 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig0_checkEmpirical","_",scale_Fig0,".pdf", sep = "")
+  name_Fig0 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig0_checkEmpirical","_",scale_Fig0,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
-pdf(name_Fig0, width = 7, height = 4.4, bg = "transparent")  
-p_final_Fig0
-dev.off()
+  pdf(name_Fig0, width = 7, height = 4.4, bg = "transparent")  
+  p_final_Fig0
+  dev.off()
+  
+}
 
 #### Fig 4 ----
 layout <- "
@@ -514,36 +515,13 @@ CD
 p_final_Fig4<-
   phyto_emp_plot + zoop_emp_plot +
   phyto_plot + zoo_plot +
-  # plot_layout(design = layout)
   plot_layout(ncol = 2, nrow = 2, guides = 'collect', heights=c(1,1), widths = c(1,1))
 
-name_Fig4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig4","_",scale_Fig4,"_",removeNA,".pdf", sep = "")
+name_Fig4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig4","_",scale_Fig4,"_",removeNA,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
-# name_Fig4<-"/home/ubuntu/Extract_SouthernOcean/Output/trial.pdf"
-
-# changing width and height fix the problem but it needs to be changed by a lot 10X10
 pdf(name_Fig4, width = 6, height = 6, bg = "transparent") 
 p_final_Fig4
 dev.off()
-
-# # when too small ... words cut off 
-# pdf("/home/ubuntu/Extract_SouthernOcean/Output/trial.pdf", width = 3.5, height = 3.5, bg = "transparent") 
-# zoop_emp_plot
-# dev.off()
-
-
-#### Fig S1 ----
-# 
-# p_final_FigS1<-
-#   phyto_plot_emp2 + zoo_plot_emp2 +
-#   phyto_plot2 + zoo_plot2 +
-#   plot_layout(ncol = 2, nrow = 2, heights=c(1,1,1,1), widths = c(1,1,1,1), guides = 'collect')
-# 
-# name_FigS1 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS1","_",scale_FigS1,"_",removeNA,".pdf", sep = "")
-# 
-# pdf(name_FigS1, width = 6, height = 6, bg = "transparent")
-# p_final_FigS1
-# dev.off()
 
 #### Fig S1B ----
 
@@ -552,7 +530,7 @@ p_final_FigS1B<-
   phyto_plot2_S1B + zoo_plot2_S1B +
   plot_layout(ncol = 2, nrow = 2, heights=c(1,1,1,1), widths = c(1,1,1,1)) # guides = 'collect'
 
-name_FigS1B = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS1","_",scale_FigS1,"_",removeNA,".pdf", sep = "")
+name_FigS1B = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS1","_",scale_FigS1,"_",removeNA,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
 pdf(name_FigS1B, width = 6, height = 6, bg = "transparent")
 p_final_FigS1B
@@ -560,29 +538,33 @@ dev.off()
 
 #### Fig S2 ----
 
-p_final_FigS2<-size1_plot + size2_plot +
-  size3_plot + size4_plot +
-  size5_plot + # size6_plot +
-  plot_layout(ncol = 3, nrow = 2, guides = 'collect')
+if(season == "year"){
+  p_final_FigS2<-size1_plot + size2_plot +
+    size3_plot + size4_plot +
+    size5_plot + # size6_plot +
+    plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-name_FigS2 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS2","_",scale_FigS2,"_",removeNA,".pdf", sep = "")
+  name_FigS2 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS2","_",scale_FigS2,"_",removeNA,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
-pdf(name_FigS2, width = 8, height = 7, bg = "transparent")
-p_final_FigS2
-dev.off()
+  pdf(name_FigS2, width = 8, height = 7, bg = "transparent")
+  p_final_FigS2
+  dev.off()
+}
 
 #### Fig S4 ----
 
-p_final_FigS4<-tl2_plot + tl3_plot +
-  tl4_plot + tl5_plot +
-  tl6_plot + # tl7_plot +
-  plot_layout(ncol = 3, nrow = 2, guides = 'collect')
+if(season == "year"){
+  p_final_FigS4<-tl2_plot + tl3_plot +
+    tl4_plot + tl5_plot +
+    tl6_plot + # tl7_plot +
+    plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-name_FigS4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS4","_",scale_FigS4,"_",removeNA,"_ltl_type_",ltl_type,".pdf", sep = "")
+  name_FigS4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS4","_",scale_FigS4,"_",removeNA,"_ltl_type_",ltl_type,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
-pdf(name_FigS4, width = 8, height = 7, bg = "transparent")
-p_final_FigS4
-dev.off()
+  pdf(name_FigS4, width = 8, height = 7, bg = "transparent")
+  p_final_FigS4
+  dev.off()
+}
 
 #### Fig S3 ---- 
 
@@ -590,12 +572,11 @@ p_final_FigS3<-
   tl1_empirical_plot + tl1_modelled_plot +
   plot_layout(ncol = 2, nrow = 1, guides = 'collect')
 
-name_FigS3 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS3","_",scale_FigS3,"_",removeNA,"_ltl.pdf", sep = "")
+name_FigS3 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS3","_",scale_FigS3,"_",removeNA,"_ltl_type_",ltl_type,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
 pdf(name_FigS3, width = 7, height = 4.4, bg = "transparent")  
 p_final_FigS3
 dev.off()
-
 
 ```
 
