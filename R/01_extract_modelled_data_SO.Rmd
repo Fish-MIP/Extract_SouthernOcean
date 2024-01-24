@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### AIM
 
-Extract mean size-resolved total consumer biomass for the period 1990-1999 across FishMIP models 
+Extract mean size-resolved total consumer biomass across FishMIP models 
 
 ### Data source 
 
@@ -27,24 +27,14 @@ scp -r b381217@levante.dkrz.de:/work/bb0820/ISIMIP/ISIMIP3b/OutputData/marine-fi
 
 ### SO boundaries 
 
-From Paul Spence:/home/ubuntu/extract_SouthernOcean/Input/1deg_om2.ocean_grid.nc" 
+Latitudinal limits (-40) to mimic Yang et al. 2022
 
-LME - not much data included - from Julia's dropbox folder FishMIP Repos/LME66/
+### Checked 
 
-World_Seas_IHO_v3 from https://www.marineregions.org/downloads.php
-
-Or just latitudinal limits to mimic Yang et al. 2022 **used this**
-
-### *TO CHECK* 
-
-Extent is different for dbpm and zoom IPSL - checked, OK 
-
-File orientation (upside-down?) - checked, OK when using raster
-
-Final values are mean g m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values we average instead of sum across months. For NPP and catch we would sum across months to get yearly value as these are rates with a time dimension.      
+Final values are mean g m-2 for the period 1990-1999 -> for models providing monthly values these are 1) annual means and 2) period means; for models providing annual values these are period means. These outputs have no time dimension (i.e. they represent a stock and not a rate, as opposed to NPP which is in s-1 or to catches which should be in e.g. year-1). Hence, here to get annual values we average instead of sum across months.       
 
 To transform from g m-2 to g C m-2 for better comparison with inputs I did /10 as suggested by Ryan, common assumption. 
-REFs: **still need to check better?**
+Also refs: 
 https://aslopubs.onlinelibrary.wiley.com/doi/full/10.1002/lno.11709 https://link.springer.com/article/10.1007/s00227-011-1783-7
 how much of the fish body is carbon? 10-15%
 
@@ -89,7 +79,7 @@ dir<-"/rd/gem/private/users/camillan/EmergentConstraintData"
 
 mem<-c("apecosm","boats", "dbpm", "zoomss", "ecotroph", "macroecological") 
 esm<-c("gfdl-esm4", "ipsl-cm6a-lr")
-scenario<-c("historical") # , "ssp126", "ssp585") # NO NEED FOR FUTURE ... 
+scenario<-c("historical") 
 
 # all 
 combinations<-expand.grid(mem = mem, esm = esm, scenario = scenario) %>%
@@ -111,8 +101,8 @@ combinations<-expand.grid(mem = mem, esm = esm, scenario = scenario) %>%
 
 netcdf = combinations$netcdf_name
 
-history_year1 = 1990
-history_year2 = 1999
+history_year1 = 1995 #1990 (see comments on 02 for reference period)
+history_year2 = 2014 #1999
 future_year1 = NA
 future_year2 = NA
 
@@ -121,11 +111,8 @@ brick_data_annual_subset_mean_ant<-mclapply(netcdf, function(x) extract_antarcti
 # mclapply returns results in the correct order: https://stackoverflow.com/questions/14697901/is-mclapply-guaranteed-to-return-its-results-in-order#:~:text=Short%20answer%3A%20it%20does%20return,an%20R%20function...)
 names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 
-## check that the order in which mcapply prints outputs is the same as the order in which inputs are given e.g. 1st output is actually apecosm gfdl etc. 
-
 # NOTE
 # land-sea mask between GFDL and IPSL is different so coastal values might be "biased" e.g. mean with na.rm=TRUE will consider only GFDL values for the very coastal gridcell (and only a set of models). use na.tm=FALSE so that these cells are NAs
-# ZOOM bins fixed but need to contact Jase and Matthias 
 
 ```
 
@@ -133,7 +120,7 @@ names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 
 ```{r}
 
-save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
+# save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 ```
 
@@ -141,8 +128,8 @@ save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOce
 
 ```{r}
 
-rm(list=ls())
-load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
+# rm(list=ls())
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 # do size classes 2:5 that are in common to all models 
 removeNA = "narmF" # narmT or narmF
@@ -212,26 +199,26 @@ if(removeNA == "narmT"){
 mean_all<-append(mean_2_5, mean_1, after = 0)
 mean_all<-append(mean_all, mean_6, after = 5)
 
-# CHECK - OK
-# calculate mean using other approach for size class 2 and compare results to above approach
-# NAs are removed by def when doing rasterToPoints() so this comparison works only when removeNA == "narmT"
-
-trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 2)
-trial[sapply(trial, is.null)] <- NULL
-
-trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
-trial2$model = gsub("[^a-zA-Z]", "", rownames(trial2))
-
-trial3<-do.call(rbind.data.frame, trial2) %>%
-  group_by(x,y) %>%
-  summarise(mean = mean(index_1, na.rm=removeNA)) %>% 
-  ungroup()
-
-trial_raster<-rasterFromXYZ(trial3)
-
-# same outputs
-plot(trial_raster)
-plot(mean_all[[2]])
+# # CHECK - OK
+# # calculate mean using other approach for size class 2 and compare results to above approach
+# # NAs are removed by def when doing rasterToPoints() so this comparison works only when removeNA == "narmT"
+# 
+# trial<-lapply(brick_data_annual_subset_mean_ant, "[[", 2)
+# trial[sapply(trial, is.null)] <- NULL
+# 
+# trial2<-lapply(trial, function(x) as.data.frame(rasterToPoints(x)))
+# trial2$model = gsub("[^a-zA-Z]", "", rownames(trial2))
+# 
+# trial3<-do.call(rbind.data.frame, trial2) %>%
+#   group_by(x,y) %>%
+#   summarise(mean = mean(index_1, na.rm=removeNA)) %>% 
+#   ungroup()
+# 
+# trial_raster<-rasterFromXYZ(trial3)
+# 
+# # same outputs
+# plot(trial_raster)
+# plot(mean_all[[2]])
 
 ```
 
@@ -239,9 +226,13 @@ plot(mean_all[[2]])
 
 ```{r}
 
-if(removeNA == "narmT"){
-  save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")}else if(removeNA == "narmF"){
-  save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
-    }
+save(mean_all, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",  Sys.Date(), "_01_extract_modelled_data_SO_means_", removeNA, "_Hyear_",history_year1, ".RData", sep = ""))
+
+# # old outputs have this format.  
+# 
+# if(removeNA == "narmT"){
+#   save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")}else if(removeNA == "narmF"){
+#   save(mean_all, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+#     }
 
 ```

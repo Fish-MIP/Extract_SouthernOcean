@@ -17,7 +17,7 @@ consider phyto and zooplankton data fro Yang et al. 2022
 
 ### Data source 
 
-Provided by Svenja (Yang email with data attached adn explained) and moved to the project Tmp_data folder: 
+Provided by Svenja (Yang email with data attached and explained) and moved to the project Tmp_data folder: 
 Zooplankton_summer_data.csv
 chla_summer_data_Dec_Mar.csv
 
@@ -51,13 +51,10 @@ head(zoop)
 # approach 1 - first raster then average 
 # https://gis.stackexchange.com/questions/79062/how-to-make-raster-from-irregular-point-data-without-interpolation
 colnames(zoop) <- c('X', 'Y', 'Z')
-# zoop$Z<-round(zoop$Z, 2)
 zoop<-as.matrix(zoop)
 
 e <- extent(zoop[,1:2])
-# e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
 e <- extent(-180, 180, -90, -40) # change to match modelled data
-# e <- e + 1000 # add this as all y's are the same - no need for your data
 # # this needs to be 2 lat by 5 long 
 columns<-360/5 
 rows<-(abs(e[3])-abs(e[4]))/2 
@@ -71,9 +68,9 @@ crs(zoop_raster) <- "+proj=longlat +datum=WGS84 +no_defs"
 phyt<-fread("/home/ubuntu/Extract_SouthernOcean/Input/chla_summer_data_Dec_Mar.csv", data.table = FALSE)
 # from Email Svenja 
 # Please find attached the Chl-a data from Guang to plot the circumpolar phytoplankton data. If I understood correctly, the data are in Chl mg m-3. To convert to depth-integrated g Chl m-2, you need to multiply the values by 41. Then, they assumed a C:Chl-a ratio of 60.5.
-head(phyt)
+
 colnames(phyt) <- c('X', 'Y', 'Z')
-# phyt$Z<-round(phyt$Z, 2)
+
 # checked with Svenja
 phyt$Z<-phyt$Z*41
 phyt$Z<-phyt$Z*60.5
@@ -81,7 +78,6 @@ phyt$Z<-phyt$Z/1000 # from mg to g
 
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
-# e <- extent(-180, 180, e[3], e[4]) # change from 179.5 to 180 as better for mapping  
 e <- extent(-180, 180, -90, -40) # change to match modelled data
 columns<-360/5 
 rows<-(abs(e[3])-abs(e[4]))/2 
@@ -104,7 +100,7 @@ crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs"
 # names      : index_1 
 # values     : 1.37047, 7.065759  (min, max)
 
-save(phyt_raster, zoop_raster, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+save(phyt_raster, zoop_raster, file = paste( "/home/ubuntu/Extract_SouthernOcean/Tmp_data/",Sys.Date(),"_03_work_with_empirical.RData", sep = ""))
 
 ```
 

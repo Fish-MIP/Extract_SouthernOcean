@@ -11,14 +11,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### NOTEs from editor 
-
-Avoid the use of the rainbow color scale. Instead, please use a single colour intensity scale or otherwise see https://www.nature.com/articles/s41467-020-19160-7 for options of other scientific colour scales.
-
-viridis is accepted for maps and colorbrewer too. 
-
-print pdf - units are inches by def (7) and pdf is vector graphic so no need for resolution to be defined. 
-
 ## Set environment 
 
 ```{r environment, echo = FALSE}
@@ -69,10 +61,9 @@ my_theme_map2<-theme_bw()+
     panel.background = element_blank(),
     plot.background = element_rect(fill="white"),
     panel.border = element_blank(),
-    legend.key.height = unit(0.7, "cm"), # this becomes width if you choose bottom position
+    legend.key.height = unit(0.7, "cm"), 
     legend.key.width = unit(0.2, "cm")
   )    
-
 
 # load functions 
 source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
@@ -85,12 +76,18 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 
 # loading data 
 removeNA = "narmF" # options narmT and narmF
+history_year1 = 1995 # see comments on 01 and 02 re period considered. 
+output_date = "2024-01-24" # latest date when the outputs from 01 and 02 were printed 
+  
+# plankton options (latest agreed version is summer and zoo and Hyear 1995)
+season = "summer" # "year" # "summer"
+zoopl = "zoo" # "zoo" # "meso"
 
 # trophic amplification 
 ltl_type = "sum" # options sum, phyto and zoop. Philip: sum preferred. 
 
 # mapping color 
-color_scale = "viridis" # options viridis and monochromatic and divergent (used for throphic amplification)
+color_scale = "viridis" # options viridis and monochromatic and divergent (used for trophic amplification)
 
 # mapping number of breaks
 breaks_vector_n = 7
@@ -98,7 +95,7 @@ breaks_vector_n = 7
 # mapping scale 
 scale_Fig0 = "raw" # not needed
 scale_Fig4 = "log" # new plot for Philip - with log scale and same legend
-scale_FigS1 = "raw" # basically same as Fig 5 but with raw values - should you have different legends here?
+scale_FigS1 = "raw" # basically same as Fig 5 but with raw values 
 scale_FigS2 = "log" # new plot for Philip - with log scale to go with Fig4 and same legend
 scale_FigS3 = "raw" # new plot for Philip - scale needs to be raw 
 scale_FigS4 = "raw" # new plot for Philip - scale needs to be raw 
@@ -108,7 +105,7 @@ min_Fig0 = 0
 max_Fig0_phyt = 8.7
 max_Fig0_zoop = 25
 
-min_Fig4 = 0.5 # if up to each dataset limits: e.g.  min = phyt_raster@data@min
+min_Fig4 = 0.5 # if up to each dataset limits: e.g. min = phyt_raster@data@min
 max_Fig4 = 5 # max = min = phyt_raster@data@max
 
 min_FigS1 = 0.5
@@ -125,11 +122,6 @@ max_FigS3 = 1.5 # 2 means that the higher trophic level is double the lower trop
 min_FigS4 = 0.5 
 max_FigS4 = 1.5 
 
-### plankton options (latest checks and versions)
-
-season = "summer" # "year"# "summer"
-zoopl = "zoo" # "zoo" # "meso"
-
 ```
 
 ## Load data means 
@@ -138,20 +130,20 @@ zoopl = "zoo" # "zoo" # "meso"
 
 # phyto and zoo are different when doing na.rm = T or F because the scale considered changes (i.e. smallest and largest values are removed when na.rm = F for zoo in particular). range of values are smaller and closer together.
 
-if(removeNA == "narmT"){
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
-}else if (removeNA == "narmF"){
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
-  load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
-}
+# if(removeNA == "narmT"){
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means.RData")
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means.RData")
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+# }else if (removeNA == "narmF"){
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO_means_narmF.RData")
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_means_narmF.RData")
+#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/03_work_with_empirical.RData")
+# }
 
-# overwrite 02 if season == summer and according to zoopl == either meso or zoo
-if (season == "summer"){
-  load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/2024-01-22_02_extract_input_SO_means_",removeNA,"_", season, "_zooType_", zoopl, ".RData", sep = ""))
-}
+# load latest outputs
+load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",output_date, "_01_extract_modelled_data_SO_means_",removeNA, "_Hyear_", history_year1, ".RData", sep = "")) # always yearly res as the only possible
+load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",output_date, "_02_extract_input_SO_means_",removeNA,"_", season, "_zooType_", zoopl, "_Hyear_", history_year1, ".RData", sep = ""))
+load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",output_date, "_03_work_with_empirical.RData", sep = ""))  
 
 ```
 
@@ -161,48 +153,8 @@ Philip: Could you plot the amplification effect for the model. So for each pixel
 
 ```{r}
 
-if(ltl_type == "phyto"){
- ltl<-mean_phyto 
-}else if(ltl_type == "zoop"){
-  ltl<-mean_zoo
-}else if(ltl_type == "sum"){
-  ltl<-mean_phyto+mean_zoo
-}
+# amplification factor for Fig S3 (zoopl/phitoplankton)
 
-# # CHECK
-# plot(mean_phyto)
-# plot(mean_zoo)
-# plot(ltl)
-# 
-# # CHECK 
-# trial1<-as.data.frame(rasterToPoints(mean_phyto))
-# trial2<-as.data.frame(rasterToPoints(mean_zoo))
-# trial3<-as.data.frame(rasterToPoints(ltl))
-# head(trial1)
-# head(trial2)
-# head(trial3)
-
-tl2<-mean_all[[1]]/ltl
-tl3<-mean_all[[2]]/mean_all[[1]]
-tl4<-mean_all[[3]]/mean_all[[2]]
-tl5<-mean_all[[4]]/mean_all[[3]]
-tl6<-mean_all[[5]]/mean_all[[4]]
-tl7<-mean_all[[6]]/mean_all[[5]]
-
-# # CHECK 
-# plot(tl2)
-# plot(mean_all[[1]])
-# plot(ltl)
-# 
-# # CHECK
-# trial1<-as.data.frame(rasterToPoints(mean_all[[1]]))
-# trial2<-as.data.frame(rasterToPoints(ltl))
-# trial3<-as.data.frame(rasterToPoints(tl2))
-# head(trial1)
-# head(trial2)
-# head(trial3)
-
-# do this for LTL too 
 # zoo/phyto empirical 
 names(phyt_raster)<-"index_1" 
 phyt_raster@data@min
@@ -225,33 +177,10 @@ plot(tl1_modelled)
 
 ```{r}
 
-# METHOD 1 
-#
-# #### Crop region you are interested in (https://www.r-bloggers.com/2019/04/zooming-in-on-maps-with-sf-and-ggplot2/)
-# antmap <- ne_countries(scale = 'medium', type = 'map_units',returnclass = 'sf') # dowloaded as simple feature
-# antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -40) # if you do -35 you get the same land plot as Yang. et al. 2022
-## warning - fixed code following this https://github.com/r-spatial/sf/issues/1902 
-## but the problem persists https://github.com/r-spatial/sf/issues/493  
-# sf_use_s2(FALSE)
-# antmap2 <- st_make_valid(antmap)
-# antmap2 <- st_crop(antmap, xmin = -180, xmax = 180, ymin = -90, ymax = -40) 
-# # ggplot() + geom_sf(data = antmap2) + theme_bw()
-# 
-# # convert rasterLayer to sf object and consider circumpolar projections within function
-# circumpolarCRS <- CRS("+proj=laea +lat_0=-90 +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
-# 
-# # from sf to spatialPoligonDataframe 
-# antmap <- as_Spatial(antmap2)
-# antmap <- st_as_sf(antmap) # convert dataframe to sf object 
-# antmap_df <- st_transform(antmap, crs = st_crs(circumpolarCRS)) # convert sf object to circumpolar Projection
-
-# METHOD 2
-#
-# based on EC code  
-# wmap<-ne_download(scale = 110, type = 'countries')
+ 
 wmap<-ne_download(scale = 'medium', type = 'map_units')
 # crop before converting to circumpolar (as in helper_function_OS for the data)  
-bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons') # WARNING - have I cut data by using -78 insted or -90???
+bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons') 
 crs(bb) <- crs(wmap)
 wmap_SO<-crop(wmap,bb)
 # plot(wmap_SO)
@@ -263,8 +192,6 @@ wmap_SO_df_circumpolar <- fortify(wmap_SO_circumpolar)
 # rename to follow map code below 
 antmap_df<-wmap_SO_df_circumpolar
 
-## no difference between method 1 and 2 
-
 ```
 
 ## Produce maps of data  
@@ -273,7 +200,7 @@ antmap_df<-wmap_SO_df_circumpolar
 
 ### Empirical data check ----
 
-# check patterns are as per Yang 
+# check patterns are as per Yang et al. 2022 
 
 if(scale_Fig0 == "raw"){
   legend_name = expression(g~C~m^{-2})
@@ -281,20 +208,14 @@ if(scale_Fig0 == "raw"){
   legend_name = expression(log~g~C~m^{-2}) 
 }
 
-# names(phyt_raster)<-"index_1" 
-# phyt_raster@data@min
-# phyt_raster@data@max
 check_phyto<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig0, max = max_Fig0_phyt, data_type = "phyto", color_scale = "viridis", theme_map = "my_theme_map", scale = scale_Fig0, breaks_vector_n = breaks_vector_n)
 check_phyto<-check_phyto+ggtitle("a) Phytoplankton empirical")
 
-# names(zoop_raster)<-"index_1" 
-# zoop_raster@data@min
-# zoop_raster@data@max 
 check_zoo<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig0, max = max_Fig0_zoop, data_type = "zoo", color_scale = "viridis", theme_map= "my_theme_map", scale = scale_Fig0, breaks_vector_n = breaks_vector_n)
 check_zoo<-check_zoo+ggtitle("b) Zooplankton empirical")
 
 ### Empirical data for Fig 4 -----
-# Fig4. Depth integrated (0-200m) a) phytoplankton and b) mesozooplankton carbon biomass for the summer months (December to March), where phytoplankton biomass is based on multiyear (1998-2020) mean summer Chl a value (ESA OC-CCI data) while mesozooplankton biomass is from the dataset assembled in Yang et al. 2022 and KRILLBASE (Atkinson et al. 2017). Panels a) and b) are adapted from Fig. 2 in Yang et al. 2022 and use the same data. Depth integrated (water column) c) phytoplankton and d) zooplankton carbon concentration projections averaged across the 1990-1999 decade and two Erath system models, IPSL-CM6A-LR and GFDL-ESM4, made available through the ISIMIP repository (https://data.isimip.org/;  https://data.isimip.org/10.48364/ISIMIP.575744.4). The range of values is kept between 0.5 and 5 g C m-2, in log scale, for better comparison across panels and to highlight geographical patterns. For a comparison with carbon biomass projections for higher trophic levels see S-Fig.2-3. The code used to produce this figure, and S-Figs. 1, 2, and 3 is available at https://github.com/Fish-MIP/Extract_SouthernOcean.  
+# Fig4. Depth integrated (surface layer) a) phytoplankton and b) mesozooplankton carbon biomass for the summer months (December to March), where phytoplankton biomass is based on multiyear (1998-2020) mean summer Chl a value (ESA OC-CCI data) while mesozooplankton biomass is from the dataset assembled in Yang et al. 2022 and KRILLBASE (Atkinson et al. 2017). Panels a) and b) are adapted from Fig. 2 in Yang et al. 2022 and use the same data. Depth integrated (water column) c) phytoplankton and d) zooplankton carbon concentration projections averaged across the years 1995-2014 and two Earth-system models, IPSL-CM6A-LR and GFDL-ESM4, made available through the ISIMIP repository (https://data.isimip.org/;  https://doi.org/10.48364/ISIMIP.575744.4). The range of values is kept between 0.5 and 5 g C m-2, in log scale, for better comparison across panels and to highlight geographical patterns (see S-Fig. 1 for raw values). For a comparison with carbon biomass projections for higher trophic levels, see S-Figs 2-4. The code used to produce this figure, and S-Figs 1-4 is available at https://github.com/Fish-MIP/Extract_SouthernOcean.  
 
 if(scale_Fig4 == "raw"){
   legend_name = expression(g~C~m^{-2})
@@ -305,7 +226,6 @@ if(scale_Fig4 == "raw"){
 names(phyt_raster)<-"index_1" 
 phyto_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = phyt_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
 phyto_emp_plot<-phyto_emp_plot+ggtitle("a) Phytoplankton empirical")
-# phyto_emp_plot
 
 phyt_raster # range
 # zoop_raster_trial<-zoop_raster
@@ -314,7 +234,6 @@ phyt_raster # range
 names(zoop_raster)<-"index_1" 
 zoop_emp_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = zoop_raster, proj = circumpolarCRS, legend_name = legend_name, min = min_Fig4, max = max_Fig4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_Fig4, breaks_vector_n = breaks_vector_n)
 zoop_emp_plot<-zoop_emp_plot+ggtitle("b) Zooplankton empirical")
-# zoop_emp_plot
 
 zoop_raster# range
 
@@ -353,36 +272,8 @@ phyto_plot2_S1B<-phyto_plot2_S1B+ggtitle("c) Phytoplankton modelled")
 zoo_plot2_S1B<-plot_SO(wmap_df = antmap_df, data_to_plot = mean_zoo, proj = circumpolarCRS, legend_name = legend_name, min =mean_zoo@data@min, max = mean_zoo@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n) 
 zoo_plot2_S1B<-zoo_plot2_S1B+ggtitle("d) Zooplankton modelled")
 
-# ### ESMs data for Map of plankton from IPSL and GFDLS as separate for Colleen to check -----
-# 
-# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
-# 
-# phyto_ipsl<-phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
-# 
-# phyto_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_ipsl@data@min, max = phyto_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# phyto_ipsl_map<-phyto_ipsl_map+ggtitle("Phytoplankton IPSL")
-# 
-# phyto_gfdl<-phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
-# 
-# phyto_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_gfdl@data@min, max = phyto_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# phyto_gfdl_map<-phyto_gfdl_map+ggtitle("Phytoplankton GFDL")
-# 
-# phyto_gfdl_map+phyto_ipsl_map
-# 
-# zoo_ipsl<-zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
-# 
-# zoo_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_ipsl@data@min, max = zoo_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# zoo_ipsl_map<-zoo_ipsl_map+ggtitle("Zooplankton IPSL")
-# 
-# zoo_gfdl<-zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
-# 
-# zoo_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_gfdl@data@min, max = zoo_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
-# zoo_gfdl_map<-zoo_gfdl_map+ggtitle("Zooplankton GFDL")
-# 
-# zoo_gfdl_map+zoo_ipsl_map
-
 ### MEMs data for Fig S2 -----
-# Fig S2. Depth integrated, size-resolved total consumers biomass projections averaged across the 1990-1999 decade and six FishMIP Marine Ecosystem Models able to produce this output and forced using IPSL-CM6A-LR and GFDL-ESM4 climate data. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg, f) >100kg. Data available at https://data.isimip.org/, ISIMIP3b simulation round. The range of values is kept between 0.5 and 5 g C m-2, in log scale, for all size classes for better comparison across plots and with maps of plankton (Fig. 4 and S-Fig.1).
+# Fig S2. Depth integrated (water column), size-resolved exploitable fish biomass projections averaged across the years 1995-2014 and six FishMIP Marine Ecosystem Models able to produce this output and forced using IPSL-CM6A-LR and GFDL-ESM4 climate data. Size classes include modelled individuals of a) 1-10g, b) 10-100g, c) 100g-1kg, d) 1-10kg, e) 10-100kg. Data available at https://data.isimip.org/, ISIMIP3b simulation round. The range of values is kept between 0.5 and 5 g C m-2, in log scale, for all size classes for better comparison across plots and with maps of plankton (Fig. 4).
 
 if(scale_FigS2 == "raw"){
   legend_name = expression(g~C~m^{-2})
@@ -423,8 +314,71 @@ size6_plot<-size6_plot+ggtitle("f) Consumers Biomass >100kg")
 mean_all[[6]]@data@min
 mean_all[[6]]@data@max
 
+### ESMs and empirical data for FigS3  ----
+# FigS3. Trophic amplification factor given by the ratio between carbon biomass projections of increasing trophic levels, if greater than one indicates higher abundance of the higher trophic level. Specifically, ratio between a) empirical estimates of zooplankton and of phytoplankton, b) modelled projections of zooplankton and of phytoplankton (with extreme values for panel a) well above 1.5; max = 27.1). Please refer to Figure 4 for more details on the data. 
+
+legend_name = "Ratio" # ratio where g C m-2 cancelled out
+color_scale = "divergent"
+breaks_vector_n = 11
+
+tl1_empirical@data@max
+
+names(tl1_empirical)<-"index_1"
+tl1_empirical_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl1_empirical, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS3, max = max_FigS3, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n) 
+tl1_empirical_plot<-tl1_empirical_plot+ggtitle("a) Empirical biomass zooplankon / phytoplankton")
+
+names(tl1_modelled)<-"index_1"
+tl1_modelled_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl1_modelled, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS3, max = max_FigS3, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n) 
+tl1_modelled_plot<-tl1_modelled_plot+ggtitle("a) Modelled biomass zooplankon / phytoplankton")
+
 ### ESMs and MEMs data for FigS4 ----
-# FigS4. Trophic amplification factor given by the ratio between carbon biomass projections of increasing trophic levels, if greater than one indicates higher abundance of the higher trophic level. Specifically, ratio between a) plankton and consumers biomass of 1-10g, b) consumers biomass of 1-10g and 10-100g, c) consumers biomass of 10-100g and 100g-1kg, d) consumers biomass of 100g-1kg and 1-10kg, e) consumers biomass of 1-10kg and 10-100kg, f) consumers biomass of 10-100kg and >100kg. Please refer to Figure 4 and S-Figure 2 for more details on plankton and consumers biomass projections, respectively.
+# FigS4. Trophic amplification factor given by the ratio between carbon biomass projections of increasing trophic levels, if greater than one indicates higher abundance of the higher trophic level. Specifically, ratio between a) plankton and consumers biomass of 1-10g, b) consumers biomass of 1-10g and 10-100g, c) consumers biomass of 10-100g and 100g-1kg, d) consumers biomass of 100g-1kg and 1-10kg, e) consumers biomass of 1-10kg and 10-100kg. Please refer to Figure 4 and S-Fig. 2 for more details on plankton and consumers biomass projections, respectively. However, note that for plankton projections, all months instead of the summer months were considered to match the resolution of the consumers biomass projections.
+
+## load the yearly data for plankton and calculate amplification factor for Fig S4 as consumer biomass is at annual resolution. (plankton/biomass1 etc..)
+season = "year"
+
+load(paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/",output_date, "_02_extract_input_SO_means_",removeNA,"_", season, "_zooType_", zoopl, "_Hyear_", history_year1, ".RData", sep = ""))
+
+if(ltl_type == "phyto"){
+  ltl<-mean_phyto 
+}else if(ltl_type == "zoop"){
+  ltl<-mean_zoo
+}else if(ltl_type == "sum"){
+  ltl<-mean_phyto+mean_zoo
+}
+
+# # CHECK
+# plot(mean_phyto)
+# plot(mean_zoo)
+# plot(ltl)
+# 
+# # CHECK 
+# trial1<-as.data.frame(rasterToPoints(mean_phyto))
+# trial2<-as.data.frame(rasterToPoints(mean_zoo))
+# trial3<-as.data.frame(rasterToPoints(ltl))
+# head(trial1)
+# head(trial2)
+# head(trial3)
+
+tl2<-mean_all[[1]]/ltl
+tl3<-mean_all[[2]]/mean_all[[1]]
+tl4<-mean_all[[3]]/mean_all[[2]]
+tl5<-mean_all[[4]]/mean_all[[3]]
+tl6<-mean_all[[5]]/mean_all[[4]]
+tl7<-mean_all[[6]]/mean_all[[5]]
+
+# # CHECK 
+# plot(tl2)
+# plot(mean_all[[1]])
+# plot(ltl)
+# 
+# # CHECK
+# trial1<-as.data.frame(rasterToPoints(mean_all[[1]]))
+# trial2<-as.data.frame(rasterToPoints(ltl))
+# trial3<-as.data.frame(rasterToPoints(tl2))
+# head(trial1)
+# head(trial2)
+# head(trial3)
 
 legend_name = "Ratio" # ratio where g C m-2 cancelled out
 color_scale = "divergent"
@@ -461,52 +415,30 @@ names(tl7)<-"index_1"
 tl7_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl7, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS4, max = max_FigS4, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS4, breaks_vector_n = breaks_vector_n)
 tl7_plot<-tl7_plot+ggtitle("f) Biomass >100kg / 10-100kg")
 
-### ESMs and empirical data for FigS3  ----
-# FigS3. Trophic amplification factor given by the ratio between carbon biomass projections of increasing trophic levels, if greater than one indicates higher abundance of the higher trophic level. Specifically, ratio between a) empirical estimates of zooplankton and of phytoplankton, b) modelled projections of zooplankton and of phytoplankton (with extreme values for panel a) well above 1.5; max = 27.1). Please refer to Figure 4 and S-Figure 2 for more details on plankton and consumers biomass projections, respectively. 
-
-legend_name = "Ratio" # ratio where g C m-2 cancelled out
-color_scale = "divergent"
-breaks_vector_n = 11
-
-## Should the max/min values change for these plots? or should we add to the legend "with extreme values well above 1.5 (max = 27.1)
-
-tl1_empirical@data@max
-
-names(tl1_empirical)<-"index_1"
-tl1_empirical_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl1_empirical, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS3, max = max_FigS3, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n) 
-tl1_empirical_plot<-tl1_empirical_plot+ggtitle("a) Empirical biomass zooplankon / phytoplankton")
-
-names(tl1_modelled)<-"index_1"
-tl1_modelled_plot<-plot_SO(wmap_df = antmap_df, data_to_plot = tl1_modelled, proj = circumpolarCRS, legend_name = legend_name, min = min_FigS3, max = max_FigS3, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS3, breaks_vector_n = breaks_vector_n) 
-tl1_modelled_plot<-tl1_modelled_plot+ggtitle("a) Modelled biomass zooplankon / phytoplankton")
-
 ```
 
 ## Save fianl plots 
 
 ```{r}
 
-## NOTE: old plots without season and zooType info use yearly plankton values and total zooplankton data. The newer alternatives are done for checking and figs will be updated depending on Philip's view. 
-
-## NOTE: only Fig4, S1 and S3 should be considered with options season = summer and zoopl = meso as the other should use yearly values and total zooplankton 
-
 #### Fig 0 check empirical ----
 
-if(season == "year"){
-  
-  p_final_Fig0<-
-    check_phyto + check_zoo +
-    plot_layout(ncol = 2, nrow = 1)
+# specify season for each plot 
+season = "summer" # no changes here as the only res available for empirical is summer
 
-  name_Fig0 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig0_checkEmpirical","_",scale_Fig0,"_",season,"_zooType_",zoopl,".pdf", sep = "")
+p_final_Fig0<-
+  check_phyto + check_zoo +
+  plot_layout(ncol = 2, nrow = 1)
 
-  pdf(name_Fig0, width = 7, height = 4.4, bg = "transparent")  
-  p_final_Fig0
-  dev.off()
-  
-}
+name_Fig0 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"Fig0_checkEmpirical","_",scale_Fig0,"_",season,"_zooType_",zoopl,".pdf", sep = "")
+
+pdf(name_Fig0, width = 7, height = 4.4, bg = "transparent")  
+p_final_Fig0
+dev.off()
 
 #### Fig 4 ----
+season = "summer"
+
 layout <- "
 AB
 CD
@@ -523,7 +455,8 @@ pdf(name_Fig4, width = 6, height = 6, bg = "transparent")
 p_final_Fig4
 dev.off()
 
-#### Fig S1B ----
+#### Fig S1 ----
+season = "summer"
 
 p_final_FigS1B<-
   phyto_plot_emp2_S1B + zoo_plot_emp2_S1B +
@@ -538,35 +471,22 @@ dev.off()
 
 #### Fig S2 ----
 
-if(season == "year"){
-  p_final_FigS2<-size1_plot + size2_plot +
-    size3_plot + size4_plot +
-    size5_plot + # size6_plot +
-    plot_layout(ncol = 3, nrow = 2, guides = 'collect')
+season = "year" # not needed here as this is the only possible resolution for consumers biomass 
 
-  name_FigS2 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS2","_",scale_FigS2,"_",removeNA,"_",season,"_zooType_",zoopl,".pdf", sep = "")
+p_final_FigS2<-size1_plot + size2_plot +
+  size3_plot + size4_plot +
+  size5_plot + # size6_plot +
+  plot_layout(ncol = 3, nrow = 2, guides = 'collect')
 
-  pdf(name_FigS2, width = 8, height = 7, bg = "transparent")
-  p_final_FigS2
-  dev.off()
-}
+name_FigS2 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS2","_",scale_FigS2,"_",removeNA,"_",season,"_zooType_",zoopl,".pdf", sep = "")
 
-#### Fig S4 ----
-
-if(season == "year"){
-  p_final_FigS4<-tl2_plot + tl3_plot +
-    tl4_plot + tl5_plot +
-    tl6_plot + # tl7_plot +
-    plot_layout(ncol = 3, nrow = 2, guides = 'collect')
-
-  name_FigS4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS4","_",scale_FigS4,"_",removeNA,"_ltl_type_",ltl_type,"_",season,"_zooType_",zoopl,".pdf", sep = "")
-
-  pdf(name_FigS4, width = 8, height = 7, bg = "transparent")
-  p_final_FigS4
-  dev.off()
-}
+pdf(name_FigS2, width = 8, height = 7, bg = "transparent")
+p_final_FigS2
+dev.off()
 
 #### Fig S3 ---- 
+
+season = "summer"
 
 p_final_FigS3<-
   tl1_empirical_plot + tl1_modelled_plot +
@@ -578,6 +498,55 @@ pdf(name_FigS3, width = 7, height = 4.4, bg = "transparent")
 p_final_FigS3
 dev.off()
 
+#### Fig S4 ----
+
+season = "year"
+
+p_final_FigS4<-tl2_plot + tl3_plot +
+  tl4_plot + tl5_plot +
+  tl6_plot + # tl7_plot +
+  plot_layout(ncol = 3, nrow = 2, guides = 'collect')
+
+name_FigS4 = paste("/home/ubuntu/Extract_SouthernOcean/Output/", Sys.Date(),"_" ,"FigS4","_",scale_FigS4,"_",removeNA,"_ltl_type_",ltl_type,"_",season,"_zooType_",zoopl,".pdf", sep = "")
+
+pdf(name_FigS4, width = 8, height = 7, bg = "transparent")
+p_final_FigS4
+dev.off()
+
 ```
 
+## Plankton plots to send for checking 
+
+```{r}
+
+# ### ESMs data for Map of plankton from IPSL and GFDLS as separate for Colleen to check -----
+# 
+# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData") # this are "yearly" value of phyto and zoo for the period 1990-1999.  
+# 
+# phyto_ipsl<-phyto_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# phyto_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_ipsl@data@min, max = phyto_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# phyto_ipsl_map<-phyto_ipsl_map+ggtitle("Phytoplankton IPSL")
+# 
+# phyto_gfdl<-phyto_ant$`gfdl-esm4_r1i1p1f1_historical_phyc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# phyto_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = phyto_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =phyto_gfdl@data@min, max = phyto_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# phyto_gfdl_map<-phyto_gfdl_map+ggtitle("Phytoplankton GFDL")
+# 
+# phyto_gfdl_map+phyto_ipsl_map
+# 
+# zoo_ipsl<-zoo_ant$`ipsl-cm6a-lr_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# zoo_ipsl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_ipsl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_ipsl@data@min, max = zoo_ipsl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# zoo_ipsl_map<-zoo_ipsl_map+ggtitle("Zooplankton IPSL")
+# 
+# zoo_gfdl<-zoo_ant$`gfdl-esm4_r1i1p1f1_historical_zooc-vint_60arcmin_global_monthly_1850_2014.nc`
+# 
+# zoo_gfdl_map<-plot_SO(wmap_df = antmap_df, data_to_plot = zoo_gfdl, proj = circumpolarCRS, legend_name = legend_name, min =zoo_gfdl@data@min, max = zoo_gfdl@data@max, data_type = "modelled", color_scale = color_scale, theme_map= "my_theme_map2", scale = scale_FigS1, breaks_vector_n = breaks_vector_n)
+# zoo_gfdl_map<-zoo_gfdl_map+ggtitle("Zooplankton GFDL")
+# 
+# zoo_gfdl_map+zoo_ipsl_map
+
+
+```
 

@@ -103,8 +103,7 @@ extract_antarctica<-function(netcdf,
   t_units<-ncatt_get(nc_data, "time", "units")$value
   b_units<-ncatt_get(nc_data, "tcblog10", "units")$value
   
-  
-  ### TO ADD - missing values 
+  ### missing values 
   missingValues<-ncatt_get(nc_data, "tcblog10", "missing_value")$value
   
   nc_close(nc_data)
@@ -185,7 +184,6 @@ extract_antarctica<-function(netcdf,
   # varname    : tcblog10 
   # level      : 1 
   
-  ## TO ADD 
   # check if land is specified as missingValues or as NA
   # options(scipen=999)
   trial<-brick_data[[1]][[1]] # take first layer and first year
@@ -383,69 +381,6 @@ extract_antarctica<-function(netcdf,
   }
   
   # SELECT SO polygon:  
-  
-  # # # USING LME 
-  # # library(sf)
-  # # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/LME66/LMEs66.shp")
-  # # ant<-shape[47,] # SO should be LME61! 
-  # 
-  # # USING World_Seas_IHO_v3
-  # library(sf)
-  # shape<-st_read("/rd/gem/private/users/camillan/Extract_SouthernOcean_Data/Input/World_Seas_IHO_v3/World_Seas_IHO_v3.shp")
-  # ant<-shape[63,] # Southern Ocean
-  # 
-  # # loop through sizes (could use lapply)
-  # https://gis.stackexchange.com/questions/385850/mask-and-crop-a-raster-to-multiple-polygons-in-r
-  # brick_data_annual_subset_mean_ant<-list()
-  # 
-  # for(i in layers){
-  #   # OK here for BOATS - the bins become 4 after line above on bins but layers are 6 with 2 NULL ones.
-  #   # macroecological is more problematic as it has 5 bins and layers... so not used here for now
-  # 
-  #   # i = 2
-  #   trial<-brick_data_annual_subset_mean[[i]]
-  #
-  # # CRS: same projections 
-  #   crs(trial) <- crs(shape)
-  # # crop(): subset to the common polygon extent (a bounding box)   
-  #   temp<-crop(trial, extent(ant))
-  # # mask(): Create a new Raster* object that has the same values as x, except for the cells that are NA (or other maskvalue) in a 'mask'
-  #   trial2<-mask(temp, ant) 
-  # # NOTE - for EcoTroph, 
-  # # here you remove some coastal outliers that are not inside the SO poligon.
-  # # because you do not remove these values with the option below based on lat band
-  # # the 2 plots from the 2 approaches look different but they are not, 
-  # # once removed these outliers using the approach below, the plots are the same 
-  # 
-  #   brick_data_annual_subset_mean_ant[[i]]<-trial2
-  #   
-  # }
-  # 
-  # # dim(brick_data_annual_subset_mean_ant[[2]])
-  # # plot(brick_data_annual_subset_mean_ant[[2]])
-  # # extent(brick_data_annual_subset_mean_ant[[2]])
-  
-  # OR cut values of lat < e.g.-40 for comparison with Yang et al. 2022
-
-  # step1<-lapply(brick_data_annual_subset_mean, function(x) as.data.frame(rasterToPoints(x)))
-  # step2<-lapply(step1, function(x) filter(x, y <= -40, y >= -78))
-  # 
-  # # transform back in raster
-  # brick_data_annual_subset_mean_ant<-lapply(step2[sapply(step2, function(x) dim(x)[1]) > 0], function(x) rasterFromXYZ(x, crs = crs(brick_data_annual_subset_mean[[1]])))
-  # 
-  # # add back dimension 1 and 6 in boats 
-  # # otherwise you need to change the averaging code 02
-  # if(model == "boats"){
-  #   brick_data_annual_subset_mean_ant<-append(brick_data_annual_subset_mean_ant, 
-  #                                             brick_data_annual_subset_mean[[1]],
-  #                                             after = 0)
-  #   brick_data_annual_subset_mean_ant<-append(brick_data_annual_subset_mean_ant, 
-  #                                             brick_data_annual_subset_mean[[6]],
-  #                                             after = 5)
-  # }
-  # 
-  # 
-
   bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons') 
   crs(bb) <- crs(brick_data_annual_subset_mean[[1]])
   brick_data_annual_subset_mean_ant<-lapply(brick_data_annual_subset_mean, function(x) crop(x,bb))
@@ -719,11 +654,7 @@ extract_antarctica_inputs<-function(netcdf,
     # plot(brick_data_annual_subset_mean)
     
     ########## select SO ----
-    # cut values of lat <e.g. -50 for comparison with Yang et al. 2022
-    
-    # step1<-as.data.frame(rasterToPoints(brick_data_annual_subset_mean))
-    # step2<-filter(step1, y <= -40, y >= -78)
-    # brick_data_annual_subset_mean_ant<-rasterFromXYZ(step2, crs = crs(brick_data_annual_subset_mean))
+    # cut values of lat < -40 for comparison with Yang et al. 2022
     
     bb <- as(extent(-180, 180, -90, -40), 'SpatialPolygons')
     crs(bb) <- crs(brick_data_annual_subset_mean)
@@ -735,7 +666,7 @@ extract_antarctica_inputs<-function(netcdf,
 
     ########## unit conversion ----
     # Units: from mol m-2 to g C m-2
-    # b_units = "mol m-2"
+
     if(b_units == "mol m-2"){
       brick_data_annual_subset_mean_ant = brick_data_annual_subset_mean_ant*12
       b_units = "g C m-2"
