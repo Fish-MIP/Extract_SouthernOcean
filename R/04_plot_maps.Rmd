@@ -77,7 +77,7 @@ source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
 # loading data 
 removeNA = "narmF" # options narmT and narmF
 history_year1 = 1995 # see comments on 01 and 02 re period considered. 
-output_date = "2024-01-24" # latest date when the outputs from 01 and 02 were printed 
+output_date = "2024-01-25" # latest date when the outputs from 01 and 02 were printed 
   
 # plankton options (latest agreed version is summer and zoo and Hyear 1995)
 season = "summer" # "year" # "summer"

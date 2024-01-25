@@ -79,7 +79,7 @@ summarise<-dplyr::summarise
 source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
 
 # plankton options (latest agreed version is summer and zoo and Hyear 1995)
-season = "summer" # "year"# "summer"
+season = "year" # "year"# "summer"
 zoopl = "zoo" # "zoo" # "meso"
 
 ```
@@ -109,7 +109,6 @@ history_year1 = 1995 # 1998 (20-years closed to the empirical data) # for empiri
 history_year2 = 2014 # 2014 (last year of historical projections) #1999
 future_year1 = NA
 future_year2 = NA
-season = "year" #"summer" # "year" # added argument, if consider the whole year set this to NA or year
 
 phyto_ant<-mclapply(netcdf_phyto, function(x) extract_antarctica_inputs(x, history_year1 =history_year1, history_year2=history_year2,future_year1 = future_year1,future_year2=future_year2, season = season), mc.cores = detectCores()-2)
 

@@ -44,20 +44,26 @@ summarise<-dplyr::summarise
 ```{r}
 
 zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Input/Zooplankton_summer_data.csv", data.table = FALSE)
-head(zoop)
+# head(zoop)
 # from Email Svenja 
 # you can find the "summer data" (n=2028) in sheet 2 of the attachment. The mean biomass in each cell (2° latitude × 5° logitiude) is just the simple arithmetic mean of all biomass in that cell. For example, if 40 records were found in a specific cell (160°E-165°E, 60°S-62°S), the value shown in our Fig. 2b is the mean of these 40 value. You can use "fishnet" tool in Arcgis (Arctoolbox/Data Management Tools/Sampling/Create Fishnet) to finish the average procedure. I wish this helps and feel free to contact me if you have any questions about the data or the use of Arcgis.
 
 # approach 1 - first raster then average 
 # https://gis.stackexchange.com/questions/79062/how-to-make-raster-from-irregular-point-data-without-interpolation
 colnames(zoop) <- c('X', 'Y', 'Z')
+# max(zoop$X)
+# min(zoop$X)
+# max(zoop$Y)
+# min(zoop$Y)
+
+zoop<-zoop %>% filter(Y <= -40) # consider -40 only as per plankton and modeleld data
 zoop<-as.matrix(zoop)
 
 e <- extent(zoop[,1:2])
-e <- extent(-180, 180, -90, -40) # change to match modelled data
+# e <- extent(-180, 180, -90, -40) # change to match modelled data
 # # this needs to be 2 lat by 5 long 
 columns<-360/5 
-rows<-(abs(e[3])-abs(e[4]))/2 
+rows<-(abs(e[3])-abs(e[4]))/2 # 38/2
 r <- raster(e, ncol=columns, nrow=rows) 
 x <- rasterize(zoop[, 1:2], r, zoop[,3], fun=mean)
 plot(x)
@@ -76,13 +82,24 @@ phyt$Z<-phyt$Z*41
 phyt$Z<-phyt$Z*60.5
 phyt$Z<-phyt$Z/1000 # from mg to g
 
+max(phyt$X)
+min(phyt$X)
+max(phyt$Y)
+min(phyt$Y)
+
 phyt<-as.matrix(phyt)
 e <- extent(phyt[,1:2])
-e <- extent(-180, 180, -90, -40) # change to match modelled data
+# e <- extent(-180, 180, -90, -40) # change to match modelled data
 columns<-360/5 
-rows<-(abs(e[3])-abs(e[4]))/2 
+rows<-(abs(e[3])-abs(e[4]))/2 # same as above
 r <- raster(e, ncol=columns, nrow=rows) 
 x <- rasterize(phyt[, 1:2], r, phyt[,3], fun=mean)
+plot(x)
+
+# fix map 
+bb <- extent(-180, 180, e[3], e[4])
+x <- setExtent(x, bb, keepres=FALSE)
+
 plot(x)
 
 phyt_raster<-x
