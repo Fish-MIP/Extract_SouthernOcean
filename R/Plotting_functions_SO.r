@@ -16,23 +16,51 @@ plot_SO<-function(wmap_df = antmap_df,
                   breaks_vector_n = 10){
   
   # # trial
-  # # wmap_df = antmap_df1
   # wmap_df = antmap_df
   # data_to_plot = phyt_raster
   # proj = circumpolarCRS
   # legend_name = legend_name
-  # min = min_Fig0
-  # max = max_Fig0_phyt #phyt_raster@data@max
-  # data_type = "phyto"
-  # color_scale = color_scale
+  # min = min_Fig4
+  # max = max_Fig4 #phyt_raster@data@max
+  # data_type = "modelled"
+  # color_scale = "viridis"
   # theme_map= "my_theme_map"
-  # scale = scale_Fig0
-  # breaks_vector_n = breaks_vector_n
+  # scale = "raw" #scale_Fig4
+  # breaks_vector_n = 7
+  
+  # values     : 0.2508073, 8.399593  (min, max)
   
   # convert rasterLayer to sf object and consider circumpolar projections within function
   data_to_plot <- rasterToPolygons(data_to_plot) # convert Rasterlayer to spatial polygon dataframe 
   data_to_plot <- st_as_sf(data_to_plot) # convert dataframe to sf object 
   data_to_plot <- st_transform(data_to_plot, crs = st_crs(circumpolarCRS)) # convert sf object to circumpolar Projection
+  
+  # # trial out of bounds values handling ... 
+  # range <-c(-1,1)
+  # scales::squish(c(-1, 0.5, 1, 2, NA), range)
+  # 
+  # p1<-ggplot() +
+  #   geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+  #   geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+  #   scale_fill_gradient(low = "red", 
+  #                       high = "green")#, 
+  #                       limits=c(min, max, # without this the full scale is shown
+  #                       oob=scales::squish) # without this, values that are oob are shown as NAs, in grey
+  # # BUT
+  # p1<-ggplot() +
+  #   geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+  #   geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+  #   scale_fill_viridis_b(option = "D",
+  #     limits=c(min, max))#, # without this the full scale is shown  
+  #     # oob = scales::squish) # without this, there is no difference - oob values are shown as squished in scale anyway and not as NAs.  
+  # 
+  # # BUT
+  # p1<-ggplot() +
+  #   geom_sf(data=data_to_plot, colour = NA, aes(fill = index_1))+
+  #   geom_polygon(data=antmap_df, aes(x=long, y=lat, group=group), fill="grey70", color=NA, linewidth = 0)+
+  #   scale_fill_viridis_c(
+  #     limits=c(min, max), 
+  #     oob = scales::squish) # continuous scale again needs squish ...
   
   
   if(scale == "log"){

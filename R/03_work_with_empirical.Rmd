@@ -51,11 +51,6 @@ zoop<-fread("/home/ubuntu/Extract_SouthernOcean/Input/Zooplankton_summer_data.cs
 # approach 1 - first raster then average 
 # https://gis.stackexchange.com/questions/79062/how-to-make-raster-from-irregular-point-data-without-interpolation
 colnames(zoop) <- c('X', 'Y', 'Z')
-# max(zoop$X)
-# min(zoop$X)
-# max(zoop$Y)
-# min(zoop$Y)
-
 zoop<-zoop %>% filter(Y <= -40) # consider -40 only as per plankton and modeleld data
 zoop<-as.matrix(zoop)
 
@@ -116,6 +111,12 @@ crs(phyt_raster) <- "+proj=longlat +datum=WGS84 +no_defs"
 # source     : memory
 # names      : index_1 
 # values     : 1.37047, 7.065759  (min, max)
+
+## phyto and zoo must have the same extent when calculating the ratio
+plot(zoop_raster)
+bb <- extent(phyt_raster)
+zoop_raster <- setExtent(zoop_raster, bb, keepres=FALSE)
+plot(zoop_raster)
 
 save(phyt_raster, zoop_raster, file = paste( "/home/ubuntu/Extract_SouthernOcean/Tmp_data/",Sys.Date(),"_03_work_with_empirical.RData", sep = ""))
 

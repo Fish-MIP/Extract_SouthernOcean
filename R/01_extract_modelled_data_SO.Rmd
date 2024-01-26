@@ -116,20 +116,9 @@ names(brick_data_annual_subset_mean_ant) <- combinations$identifier
 
 ```
 
-### save data
-
-```{r}
-
-# save(brick_data_annual_subset_mean_ant, file = "/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
-
-```
-
 ### multimodel means 
 
 ```{r}
-
-# rm(list=ls())
-# load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/01_extract_modelled_data_SO.RData")
 
 # do size classes 2:5 that are in common to all models 
 removeNA = "narmF" # narmT or narmF

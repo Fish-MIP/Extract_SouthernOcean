@@ -79,7 +79,7 @@ summarise<-dplyr::summarise
 source("/home/ubuntu/Extract_SouthernOcean/R/Helper_functions_SO.r")
 
 # plankton options (latest agreed version is summer and zoo and Hyear 1995)
-season = "year" # "year"# "summer"
+season = "summer" # "year"# "summer"
 zoopl = "zoo" # "zoo" # "meso"
 
 ```
@@ -120,30 +120,9 @@ names(zoo_ant) <- netcdf_zoo
 
 ```
 
-### save data 
-
-```{r}
-
-## NOTE - if you run this you need to adjust as per naming below 
-# if(season == "summer"){
-#   save(phyto_ant, zoo_ant, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(), "_02_extract_input_SO_summer.RData", sep =""))
-# }else if(season == "year") {
-#   save(phyto_ant, zoo_ant, file = paste("/home/ubuntu/Extract_SouthernOcean/Tmp_data/", Sys.Date(), "_02_extract_input_SO.RData", sep = ""))
-# }
-
-```
-
 ### multimodel means 
 
 ```{r}
-
-# rm(list=ls())
-# 
-# if(season == "summer"){
-#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO_summer.RData")
-# }else if(season == "year") {
-#   load("/home/ubuntu/Extract_SouthernOcean/Tmp_data/02_extract_input_SO.RData")
-# }
 
 removeNA = "narmF" # narmT or narmF
 
