@@ -67,6 +67,7 @@ my_theme_map2<-theme_bw()+
 
 # load functions 
 source("/home/ubuntu/Extract_SouthernOcean/R/Plotting_functions_SO.r")
+# Checked oob argument in plotting function as well - all good. 
 
 ```
 
@@ -164,9 +165,38 @@ zoop_raster@data@max
 tl1_empirical<-zoop_raster/phyt_raster
 plot(tl1_empirical)
 
+# # CHECK
+# trial1<-as.data.frame(zoop_raster , xy=TRUE)
+# trial2<-as.data.frame(phyt_raster, xy=TRUE) %>% rename(index_2 = index_1)
+# 
+# trial3<-trial1 %>% full_join(trial2) %>% mutate(ratio = index_1/index_2)
+# trial4<-rasterFromXYZ(trial3[,c("x", "y", "ratio")])
+# plot(trial4)
+# plot(tl1_empirical)
+# 
+# trial5<-as.data.frame(tl1_empirical, xy=TRUE)
+# trial1[60:70,]
+# trial2[60:70,]
+# trial5[60:70,]
+# 0.04702734/0.7903568 # 0.0595014
+
 # zoo/phyto modelled 
 tl1_modelled<-mean_zoo/mean_phyto
 plot(tl1_modelled)
+
+# # check 
+# trial1<-as.data.frame(mean_zoo , xy=TRUE)
+# trial2<-as.data.frame(mean_phyto, xy=TRUE) %>% rename(index_2 = index_1)
+# 
+# trial3<-trial1 %>% full_join(trial2) %>% mutate(ratio = index_1/index_2)
+# trial4<-rasterFromXYZ(trial3[,c("x", "y", "ratio")])
+# plot(trial4)
+# plot(tl1_modelled)
+# 
+# trial5<-as.data.frame(tl1_modelled, xy=TRUE)
+# head(trial1)
+# head(trial2)
+# head(trial5)
 
 ```
 
